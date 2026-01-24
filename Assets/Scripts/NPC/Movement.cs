@@ -10,7 +10,7 @@ public class Movement : MonoBehaviour
     private enum Behaviours
     {
         Patrol,
-        Listen,
+        Listen
     }
 
     [SerializeField] Behaviours currentState;
@@ -19,7 +19,6 @@ public class Movement : MonoBehaviour
     private GameObject player;
 
     private Vector3 target;
-    private Vector3 startingPos;
 
     [SerializeField] private float stoppingDistance = 0.1f;
 
@@ -28,7 +27,7 @@ public class Movement : MonoBehaviour
     private int currentWaypoint;
     private bool stateChanged;
 
-    [SerializeField] private bool pauseAtEnd, pauseAtEachPoint;
+    [SerializeField] private bool pauseAtPoint;
     [SerializeField] private float minPause, maxPause;
 
     private Coroutine moveCoroutine;
@@ -44,50 +43,49 @@ public class Movement : MonoBehaviour
         player = GameObject.FindGameObjectWithTag("Player");
 
         currentState = Behaviours.Patrol;
-        target = startingPos;
         stateChanged = true;
 
         if (waypoints.Count != 0)
         {
             currentWaypoint = 0;
-
-            player.transform.position = waypoints[currentWaypoint].position;
         }
 
-        if (currentState == Behaviours.Patrol)
-        {
-            moveCoroutine = StartCoroutine(Move());
-        }
+        StartPatrolling();
     }
-
+/*
     private void Update()
     {
         switch (currentState)
         {
             case Behaviours.Patrol:
-                if (stateChanged)
-                {
-                    if (moveCoroutine != null)
-                        StopCoroutine(moveCoroutine);
-                    
-                    moveCoroutine = StartCoroutine(Move());
-                    stateChanged = false;
-                }
+                // No need for state change check in Update since we handle it in triggers
                 break;
 
             case Behaviours.Listen:
-                if (stateChanged)
-                {
-                    agent.isStopped = true;
-                    if (moveCoroutine != null)
-                    {
-                        StopCoroutine(moveCoroutine);
-                        moveCoroutine = null;
-                    }
-                    stateChanged = false;
-                }
+                // Just stay in listen mode, movement is already stopped
                 break;
         }
+    }
+*/
+    private void StartPatrolling()
+    {
+        if (moveCoroutine != null)
+        {
+            StopCoroutine(moveCoroutine);
+            moveCoroutine = null;
+        }
+        
+        moveCoroutine = StartCoroutine(Move());
+    }
+
+    private void StopPatrolling()
+    {
+        if (moveCoroutine != null)
+        {
+            StopCoroutine(moveCoroutine);
+            moveCoroutine = null;
+        }
+        agent.isStopped = true;
     }
 
     private IEnumerator Move()
@@ -113,7 +111,7 @@ public class Movement : MonoBehaviour
                         yield break;
                 }
                 
-                if (pauseAtEachPoint || (pauseAtEnd && currentWaypoint == waypoints.Count - 1))
+                if (pauseAtPoint)
                 {
                     float pauseTime = Random.Range(minPause, maxPause);
                     float timer = 0f;
@@ -147,14 +145,12 @@ public class Movement : MonoBehaviour
         }
     }
 
-
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Player"))
         {
-            stateChanged = true;
-
             currentState = Behaviours.Listen;
+            StopPatrolling();
         }
     }
 
@@ -162,9 +158,8 @@ public class Movement : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            stateChanged = true;
-
             currentState = Behaviours.Patrol;
+            StartPatrolling();
         }
     }
 }

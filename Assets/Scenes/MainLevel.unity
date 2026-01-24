@@ -202,8 +202,7 @@ MonoBehaviour:
   - {fileID: 2078490533}
   - {fileID: 355559018}
   - {fileID: 885578876}
-  pauseAtEnd: 0
-  pauseAtEachPoint: 0
+  pauseAtPoint: 0
   minPause: 1
   maxPause: 3
 --- !u!1 &51253315
@@ -1291,8 +1290,7 @@ PrefabInstance:
       propertyPath: m_Name
       value: Chest
       objectReference: {fileID: 0}
-    m_RemovedComponents:
-    - {fileID: 5140162987864164747, guid: c29a398cb2ee50548b4b97d8829833c1, type: 3}
+    m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
@@ -2085,7 +2083,7 @@ GameObject:
   - component: {fileID: 9049872677177458023}
   m_Layer: 0
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
