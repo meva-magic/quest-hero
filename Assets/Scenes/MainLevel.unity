@@ -155,36 +155,13 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 31636005}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9d73b1287f0d02d4fa3165f8a2abec19, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   mainCam: {fileID: 1521029208}
   dialogueCam: {fileID: 320066233}
---- !u!114 &31636014
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 31636005}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9fdd5830da5cb2b4d961c682573086b5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  currentState: 0
-  currentPathMode: 2
-  stoppingDistance: 2
-  waypoints:
-  - {fileID: 2078490533}
-  - {fileID: 355559018}
-  - {fileID: 885578876}
-  pauseAtEnd: 0
-  pauseAtEachPoint: 1
-  minPause: 0
-  maxPause: 0
 --- !u!195 &31636016
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -207,6 +184,28 @@ NavMeshAgent:
   m_BaseOffset: 0.5
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
+--- !u!114 &31636019
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 31636005}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b049443919a9f9d45a9bc92b8d12ca51, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  currentState: 0
+  stoppingDistance: 0.1
+  waypoints:
+  - {fileID: 2078490533}
+  - {fileID: 355559018}
+  - {fileID: 885578876}
+  pauseAtEnd: 0
+  pauseAtEachPoint: 0
+  minPause: 1
+  maxPause: 3
 --- !u!1 &51253315
 GameObject:
   m_ObjectHideFlags: 0
@@ -1250,7 +1249,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2696652913563236790, guid: c29a398cb2ee50548b4b97d8829833c1, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.7
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2696652913563236790, guid: c29a398cb2ee50548b4b97d8829833c1, type: 3}
       propertyPath: m_LocalPosition.y
@@ -1299,7 +1298,7 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 5125236647910829098, guid: c29a398cb2ee50548b4b97d8829833c1, type: 3}
       insertIndex: 1
-      addedObject: {fileID: 31636014}
+      addedObject: {fileID: 31636019}
     - targetCorrespondingSourceObject: {fileID: 5125236647910829098, guid: c29a398cb2ee50548b4b97d8829833c1, type: 3}
       insertIndex: 2
       addedObject: {fileID: 31636011}

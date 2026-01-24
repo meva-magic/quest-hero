@@ -3,26 +3,17 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
-public class QuestNPC : MonoBehaviour
+public class Movement : MonoBehaviour
 {
-    public static QuestNPC instance;
+    public static Movement instance;
 
     private enum Behaviours
     {
         Patrol,
         Listen,
-        Chase
-    }
-
-    private enum PathMode
-    {
-        Random,
-        Looping,
-        ReverseLooping
     }
 
     [SerializeField] Behaviours currentState;
-    [SerializeField] PathMode currentPathMode;
 
     private NavMeshAgent agent;
     private GameObject player;
@@ -30,14 +21,12 @@ public class QuestNPC : MonoBehaviour
     private Vector3 target;
     private Vector3 startingPos;
 
-    [SerializeField] private float stoppingDistance = 0.3f;
+    [SerializeField] private float stoppingDistance = 0.1f;
 
     [SerializeField] private List<Transform> waypoints;
 
-    private int currentWaypoint = 0;
-    private bool isWaiting = false;
+    private int currentWaypoint;
     private bool stateChanged;
-    private bool inRange;
 
     [SerializeField] private bool pauseAtEnd, pauseAtEachPoint;
     [SerializeField] private float minPause, maxPause;
@@ -58,7 +47,13 @@ public class QuestNPC : MonoBehaviour
         target = startingPos;
         stateChanged = true;
 
-        // Start patrolling
+        if (waypoints.Count != 0)
+        {
+            currentWaypoint = 0;
+
+            player.transform.position = waypoints[currentWaypoint].position;
+        }
+
         if (currentState == Behaviours.Patrol)
         {
             moveCoroutine = StartCoroutine(Move());
@@ -83,7 +78,6 @@ public class QuestNPC : MonoBehaviour
             case Behaviours.Listen:
                 if (stateChanged)
                 {
-                    // Stop movement
                     agent.isStopped = true;
                     if (moveCoroutine != null)
                     {
@@ -93,30 +87,13 @@ public class QuestNPC : MonoBehaviour
                     stateChanged = false;
                 }
                 break;
-                
-            case Behaviours.Chase:
-                if (stateChanged)
-                {
-                    // Stop patrol coroutine
-                    if (moveCoroutine != null)
-                    {
-                        StopCoroutine(moveCoroutine);
-                        moveCoroutine = null;
-                    }
-                    stateChanged = false;
-                }
-                target = player.transform.position;
-                agent.SetDestination(target);
-                break;
         }
     }
 
     private IEnumerator Move()
     {
-        // Make sure waypoints exist
         if (waypoints == null || waypoints.Count == 0)
         {
-            Debug.LogWarning("No waypoints assigned to QuestNPC!");
             yield break;
         }
 
@@ -124,23 +101,19 @@ public class QuestNPC : MonoBehaviour
         
         while (currentState == Behaviours.Patrol)
         {    
-            // Set destination to current waypoint
             if (waypoints[currentWaypoint] != null)
             {
                 agent.SetDestination(waypoints[currentWaypoint].position);
                 
-                // Wait until we reach the waypoint
                 while (agent.pathPending || agent.remainingDistance > stoppingDistance)
                 {
                     yield return null;
                     
-                    // Check if state changed while moving
                     if (currentState != Behaviours.Patrol)
                         yield break;
                 }
                 
-                // We've reached the waypoint
-                if (pauseAtEachPoint || (pauseAtEnd && currentWaypoint == waypoints.Count - 1 && currentPathMode == PathMode.Looping))
+                if (pauseAtEachPoint || (pauseAtEnd && currentWaypoint == waypoints.Count - 1))
                 {
                     float pauseTime = Random.Range(minPause, maxPause);
                     float timer = 0f;
@@ -152,12 +125,11 @@ public class QuestNPC : MonoBehaviour
                     }
                 }
                 
-                // Update to next waypoint based on path mode
                 UpdateNextWaypoint();
             }
+
             else
             {
-                Debug.LogWarning($"Waypoint {currentWaypoint} is null!");
                 yield break;
             }
         }
@@ -165,44 +137,24 @@ public class QuestNPC : MonoBehaviour
 
     private void UpdateNextWaypoint()
     {
-        switch (currentPathMode)
+        if (currentWaypoint == 0)
         {
-            case PathMode.Looping:
-                currentWaypoint = (currentWaypoint + 1) % waypoints.Count;
-                break;
-                
-            case PathMode.ReverseLooping:
-                if (currentWaypoint == 0)
-                {
-                    currentWaypoint = waypoints.Count - 1;
-                }
-                else
-                {
-                    currentWaypoint--;
-                }
-                break;
-                
-            case PathMode.Random:
-                int newWaypoint;
-                // Make sure we don't get the same waypoint (unless there's only one)
-                do
-                {
-                    newWaypoint = Random.Range(0, waypoints.Count);
-                } 
-                while (newWaypoint == currentWaypoint && waypoints.Count > 1);
-                
-                currentWaypoint = newWaypoint;
-                break;
+            currentWaypoint = waypoints.Count - 1;
+        }
+        else
+        {
+            currentWaypoint--;
         }
     }
+
 
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Player"))
         {
-            inRange = true;
-            currentState = Behaviours.Listen;
             stateChanged = true;
+
+            currentState = Behaviours.Listen;
         }
     }
 
@@ -210,29 +162,9 @@ public class QuestNPC : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            inRange = false;
-            currentState = Behaviours.Patrol;
             stateChanged = true;
-        }
-    }
 
-    // Helper method to debug waypoints
-    private void OnDrawGizmos()
-    {
-        if (waypoints != null && waypoints.Count > 0)
-        {
-            Gizmos.color = Color.yellow;
-            for (int i = 0; i < waypoints.Count; i++)
-            {
-                if (waypoints[i] != null)
-                {
-                    Gizmos.DrawSphere(waypoints[i].position, 0.5f);
-                    if (i < waypoints.Count - 1 && waypoints[i + 1] != null)
-                    {
-                        Gizmos.DrawLine(waypoints[i].position, waypoints[i + 1].position);
-                    }
-                }
-            }
+            currentState = Behaviours.Patrol;
         }
     }
 }

@@ -10,7 +10,7 @@ public class NPCScriptableObject : ScriptableObject
     public Sprite portrait;
     public AudioClip voice;
 
-    [SerializeField] private float voicePitch = 1f;
+    //[SerializeField] private float voicePitch = 1f;
     
     public string[] dialogueLines;
     public bool[] skipLines;
