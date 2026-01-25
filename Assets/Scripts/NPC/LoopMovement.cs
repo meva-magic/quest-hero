@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
-public class Movement : MonoBehaviour
+public class LoopMovement : MonoBehaviour
 {
-    public static Movement instance;
+    public static LoopMovement instance;
 
     private enum Behaviours
     {
@@ -25,7 +25,6 @@ public class Movement : MonoBehaviour
     [SerializeField] private List<Transform> waypoints;
 
     private int currentWaypoint;
-    private bool stateChanged;
 
     [SerializeField] private bool pauseAtPoint;
     [SerializeField] private float minPause, maxPause;
@@ -43,7 +42,6 @@ public class Movement : MonoBehaviour
         player = GameObject.FindGameObjectWithTag("Player");
 
         currentState = Behaviours.Patrol;
-        stateChanged = true;
 
         if (waypoints.Count != 0)
         {

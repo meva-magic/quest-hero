@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
-public class NPCPatrol : MonoBehaviour
+public class RandomMovement : MonoBehaviour
 {
     public NavMeshAgent agent;
     public float range; 
