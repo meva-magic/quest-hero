@@ -5,4 +5,10 @@ public class DialogueResponse
 {
     public string responseText;
     public DialogueNode nextNode;
+    
+    public bool activateQuest;
+    //public QuestNode questNode;
+
+    public bool giveReward;
+    public GameObject rewardPrefab;
 }

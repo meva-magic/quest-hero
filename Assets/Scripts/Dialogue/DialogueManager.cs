@@ -54,15 +54,26 @@ public class DialogueManager : MonoBehaviour
     // Handles response selection and triggers next dialogue node
     public void SelectResponse(DialogueResponse response, string title)
     {
-        // Check if there's a follow-up node
-        if (!response.nextNode.IsLastNode())
+        // Check if this response should activate a quest
+        if (response.activateQuest)
         {
-            StartDialogue(title, response.nextNode); // Start next dialogue
+            Debug.Log($"Quest activated");
+            // Later you can call: QuestManager.Instance.ActivateQuest(questID);
+        }
+
+        if (response.giveReward)
+        {
+            Debug.Log($"Quest reward granted");
+            // Later you can call: QuestManager.Instance.ActivateQuest(questID);
         }
         
+        // Check if there's a follow-up node
+        if (response.nextNode != null && !response.nextNode.IsLastNode())
+        {
+            StartDialogue(title, response.nextNode);
+        }
         else
         {
-            // If no follow-up node, end the dialogue
             HideDialogue();
         }
     }

@@ -16,3 +16,6 @@ MonoBehaviour:
   responses:
   - responseText: close dialogue
     nextNode: {fileID: 11400000, guid: afeb13d7fbc14b548a75697028f781a4, type: 2}
+    activateQuest: 1
+    giveReward: 0
+    rewardPrefab: {fileID: 0}
