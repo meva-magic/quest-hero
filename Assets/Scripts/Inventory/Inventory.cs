@@ -6,23 +6,21 @@ using UnityEngine.Rendering;
 [RequireComponent(typeof(Collider))]
 public class Inventory : MonoBehaviour
 {
+    public static Inventory instance;
+
     [Header("References")]
-    [SerializeField]
-    InventoryUI ui;
+    [SerializeField] InventoryUI ui;
 
     [Header("Prefabs")]
-    [SerializeField]
-    GameObject droppedItemPrefab;
-
-    [Header("Audio Clips")]
-    [SerializeField]
-    AudioClip pickUpItemAudio;
-    [SerializeField]
-    AudioClip dropItemAudio;
+    [SerializeField] GameObject droppedItemPrefab;
 
     [Header("State")]
-    [SerializeField]
-    SerializedDictionary<string, Item> inventory = new();
+    [SerializeField] SerializedDictionary<string, ItemObject> inventory = new();
+
+    private void Awake()
+    {
+        instance = this;
+    }
 
     public void OnTriggerEnter(Collider other)
     {
@@ -42,7 +40,7 @@ public class Inventory : MonoBehaviour
         }
     }
 
-    void AddItem(Item item)
+    void AddItem(ItemObject item)
     {
         var inventoryId = Guid.NewGuid().ToString();
         inventory.Add(inventoryId, item);

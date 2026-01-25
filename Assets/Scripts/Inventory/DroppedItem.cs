@@ -12,7 +12,7 @@ public class DroppedItem : MonoBehaviour
     float enabledPickupDelay = 3.0f;
 
     [Header("State")]
-    public Item item;
+    public ItemObject item;
     public bool pickedUp = false;
 
     void Start()
@@ -23,7 +23,7 @@ public class DroppedItem : MonoBehaviour
         }
     }
 
-    public void Initialize(Item item)
+    public void Initialize(ItemObject item)
     {
         this.item = item;
         var droppedItem = Instantiate(item.prefab, transform);

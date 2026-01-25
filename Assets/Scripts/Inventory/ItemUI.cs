@@ -11,7 +11,7 @@ public class ItemUI : MonoBehaviour
     [SerializeField]
     Button button;
 
-    public void Initialize(string inventoryId, Item item, Action<string> removeItemAction)
+    public void Initialize(string inventoryId, ItemObject item, Action<string> removeItemAction)
     {
         image.sprite = item.icon;
         transform.localScale = Vector3.one;

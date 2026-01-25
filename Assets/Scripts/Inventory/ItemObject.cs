@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "Item", menuName = "RumpledCode/Item", order = 1)]
-public class Item : ScriptableObject
+public class ItemObject : ScriptableObject
 {
     public string id;
     public string description;
