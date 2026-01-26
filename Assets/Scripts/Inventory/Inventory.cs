@@ -38,7 +38,6 @@ public class Inventory : MonoBehaviour
         return null;
     }
 
-    // Remove item without dropping it (for quest completion)
     public bool RemoveItemWithoutDrop(string itemId)
     {
         string itemToRemove = null;
@@ -54,7 +53,6 @@ public class Inventory : MonoBehaviour
         
         if (itemToRemove != null)
         {
-            // Just remove from inventory and UI, don't drop
             inventory.Remove(itemToRemove);
             ui.RemoveUIItem(itemToRemove);
             Debug.Log($"Removed quest item without dropping: {itemId}");
@@ -63,7 +61,6 @@ public class Inventory : MonoBehaviour
         return false;
     }
 
-    // Original method - removes AND drops
     public bool RemoveItem(string itemId)
     {
         string itemToRemove = null;

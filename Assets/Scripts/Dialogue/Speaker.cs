@@ -23,7 +23,6 @@ public class Speaker : MonoBehaviour
  
     public void SpeakTo()
     {
-        // Check if player has an active quest from this NPC
         if (QuestManager.instance.currentQuest != null && 
             Dialogue.questNode != null &&
             Dialogue.questNode == QuestManager.instance.currentQuest)
@@ -32,19 +31,15 @@ public class Speaker : MonoBehaviour
             
             if (QuestManager.instance.goalAchieved)
             {
-                // Show success dialogue if quest item is found
                 DialogueManager.Instance.StartDialogue(Name, Dialogue.questSuccessNode);
             }
             else
             {
-                // Show reminder dialogue if quest is active but not completed
                 DialogueManager.Instance.StartDialogue(Name, Dialogue.questReminderNode);
             }
         }
         else
         {
-            // Show normal dialogue
-            //HideDialogue(); // This will hide the dialogue if there's no nextNode
             DialogueManager.Instance.StartDialogue(Name, Dialogue.RootNode);
         }
     }

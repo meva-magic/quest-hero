@@ -33,13 +33,11 @@ public class DialogueManager : MonoBehaviour
         DialogTitleText.text = title;
         DialogBodyText.text = node.dialogueText;
  
-        // Clear existing buttons
         foreach (Transform child in responseButtonContainer)
         {
             Destroy(child.gameObject);
         }
  
-        // Create response buttons
         foreach (DialogueResponse response in node.responses)
         {
             GameObject buttonObj = Instantiate(responseButtonPrefab, responseButtonContainer);
@@ -51,26 +49,23 @@ public class DialogueManager : MonoBehaviour
  
     public void SelectResponse(DialogueResponse response, string title)
     {
-        // Handle quest activation
         if (response.activateQuest && response.questNode != null)
         {
             QuestManager.instance.ActivateQuest(response.questNode);
         }
 
-        // Handle quest completion
         if (response.finishQuest)
         {
             QuestManager.instance.FinishQuest();
         }
 
-        // Handle next dialogue node
         if (response.nextNode != null)
         {
             StartDialogue(title, response.nextNode);
         }
         else
         {
-            HideDialogue(); // This will hide the dialogue if there's no nextNode
+            HideDialogue();
         }
     }
  

@@ -5,7 +5,6 @@ using UnityEngine;
 public class DroppedItem : MonoBehaviour
 {
     [Header("Settings")]
-    //[SerializeField]
     public bool autoStart;
 
     [SerializeField]

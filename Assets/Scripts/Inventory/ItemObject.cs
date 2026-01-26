@@ -7,5 +7,5 @@ public class ItemObject : ScriptableObject
     public string description;
     public Sprite icon;
     public GameObject prefab;
-    public bool isQuestItem; // Added to identify quest items
+    public bool isQuestItem;
 }

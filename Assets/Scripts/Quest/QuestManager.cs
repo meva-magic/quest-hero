@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class QuestManager : MonoBehaviour
 {
@@ -11,8 +12,8 @@ public class QuestManager : MonoBehaviour
     public QuestNode currentQuest;
     
     public GameObject questUIParent;
-    public Text questNameText;
-    public Text questDescriptionText;
+    public TextMeshProUGUI questNameText;
+    public TextMeshProUGUI questDescriptionText;
     public Image questIconImage;
 
     private void Awake()
@@ -40,8 +41,6 @@ public class QuestManager : MonoBehaviour
             
         if (questIconImage != null && quest.questIcon != null)
             questIconImage.sprite = quest.questIcon;
-            
-        Debug.Log($"Quest activated: {quest.questName}");
     }
 
     public bool CheckGoal()
@@ -68,59 +67,40 @@ public class QuestManager : MonoBehaviour
     {
         if (currentQuest == null)
         {
-            Debug.LogWarning("No active quest to finish");
             return;
         }
 
-        // Check if goal is achieved
         if (!CheckGoal())
         {
-            Debug.Log("Quest cannot be finished - goal not achieved");
             return;
         }
 
-        Debug.Log($"Finishing quest: {currentQuest.questName}");
-        
-        // Remove quest item from inventory (without dropping it)
         if (Inventory.instance != null)
         {
             bool removed = Inventory.instance.RemoveItemWithoutDrop(currentQuest.questItemID);
-            Debug.Log($"Quest item removed: {removed}");
         }
         
-        // Give reward
         if (currentQuest.rewardPrefab != null)
         {
-            Debug.Log($"Spawning reward: {currentQuest.rewardPrefab.name}");
             GiveReward(currentQuest.rewardPrefab);
         }
-        else
-        {
-            Debug.LogWarning("No reward prefab set for this quest!");
-        }
         
-        // Hide quest UI
         if (questUIParent != null)
             questUIParent.SetActive(false);
             
-        // Reset current quest
         currentQuest = null;
         goalAchieved = false;
-        
-        Debug.Log("Quest finished successfully");
     }
 
     public void GiveReward(GameObject rewardPrefab)
     {
         if (rewardPrefab == null) 
         {
-            Debug.LogError("Reward prefab is null!");
             return;
         }
         
         try
         {
-            // Find player position to spawn near player
             GameObject player = GameObject.FindGameObjectWithTag("Player");
             Vector3 spawnPosition;
             
@@ -133,19 +113,12 @@ public class QuestManager : MonoBehaviour
                 spawnPosition = transform.position + Vector3.forward * 2f;
             }
             
-            Debug.Log($"Spawning reward at position: {spawnPosition}");
+             GameObject rewardInstance = Instantiate(rewardPrefab, spawnPosition, Quaternion.identity);
             
-            // Instantiate the reward prefab
-            GameObject rewardInstance = Instantiate(rewardPrefab, spawnPosition, Quaternion.identity);
-            Debug.Log($"Reward instantiated: {rewardInstance.name}");
-            
-            // Check if it has DroppedItem component
             DroppedItem droppedItem = rewardInstance.GetComponent<DroppedItem>();
+         
             if (droppedItem != null)
             {
-                Debug.Log($"Reward has DroppedItem component: {droppedItem.item?.name}");
-                
-                // If autoStart is false, initialize it
                 if (!droppedItem.autoStart && droppedItem.item == null)
                 {
                     // You might need to set the item from the QuestNode
@@ -154,21 +127,13 @@ public class QuestManager : MonoBehaviour
             }
             else
             {
-                Debug.LogWarning("Reward prefab doesn't have DroppedItem component! Adding one...");
-                // Add DroppedItem component if missing
                 droppedItem = rewardInstance.AddComponent<DroppedItem>();
                 droppedItem.autoStart = true;
-                // You might need to set the item here
             }
             
-            if (AudioManager.instance != null)
-                AudioManager.instance.Play("Reward");
-                
-            Debug.Log("Reward successfully spawned!");
+            AudioManager.instance.Play("Reward");
         }
-        catch (System.Exception e)
-        {
-            Debug.LogError($"Error spawning reward: {e.Message}");
-        }
+        
+        catch (System.Exception e) { }
     }
 }
