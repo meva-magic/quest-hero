@@ -55,9 +55,10 @@ public class Inventory : MonoBehaviour
         {
             inventory.Remove(itemToRemove);
             ui.RemoveUIItem(itemToRemove);
-            Debug.Log($"Removed quest item without dropping: {itemId}");
+
             return true;
         }
+        
         return false;
     }
 
