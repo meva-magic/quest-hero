@@ -5,8 +5,8 @@ using UnityEngine;
 public class DroppedItem : MonoBehaviour
 {
     [Header("Settings")]
-    [SerializeField]
-    bool autoStart;
+    //[SerializeField]
+    public bool autoStart;
 
     [SerializeField]
     float enabledPickupDelay = 3.0f;

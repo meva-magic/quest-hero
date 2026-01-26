@@ -16,10 +16,8 @@ public class Inventory : MonoBehaviour
     [Header("State")]
     [SerializeField] SerializedDictionary<string, ItemObject> inventory = new();
 
-    // Public property to access inventory
     public SerializedDictionary<string, ItemObject> Items => inventory;
 
-    // Public method to check if item exists
     public bool HasItem(string itemId)
     {
         foreach (var item in inventory.Values)
@@ -30,7 +28,6 @@ public class Inventory : MonoBehaviour
         return false;
     }
 
-    // Public method to get item by ID
     public ItemObject GetItem(string itemId)
     {
         foreach (var item in inventory.Values)
@@ -41,7 +38,32 @@ public class Inventory : MonoBehaviour
         return null;
     }
 
-    // Public method to remove item by ID
+    // Remove item without dropping it (for quest completion)
+    public bool RemoveItemWithoutDrop(string itemId)
+    {
+        string itemToRemove = null;
+        
+        foreach (var kvp in inventory)
+        {
+            if (kvp.Value.id == itemId)
+            {
+                itemToRemove = kvp.Key;
+                break;
+            }
+        }
+        
+        if (itemToRemove != null)
+        {
+            // Just remove from inventory and UI, don't drop
+            inventory.Remove(itemToRemove);
+            ui.RemoveUIItem(itemToRemove);
+            Debug.Log($"Removed quest item without dropping: {itemId}");
+            return true;
+        }
+        return false;
+    }
+
+    // Original method - removes AND drops
     public bool RemoveItem(string itemId)
     {
         string itemToRemove = null;
