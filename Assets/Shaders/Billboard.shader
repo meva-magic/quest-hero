@@ -8,8 +8,8 @@ Shader "Unlit/Billboard"
     {
         Tags { "RenderType"="Transparent" "Queue"="Transparent" }
         Blend SrcAlpha OneMinusSrcAlpha
-        ZWrite On  // Important for proper depth sorting
-        Cull Off   // We'll see both sides
+        ZWrite On
+        Cull Off
         LOD 100
 
         Pass
@@ -41,21 +41,31 @@ Shader "Unlit/Billboard"
             {
                 v2f o;
                 
-                // Get camera position in object space
+                // Get the object's position in world space
                 float3 worldPos = mul(unity_ObjectToWorld, float4(0, 0, 0, 1)).xyz;
                 
-                // Get camera forward and up vectors
-                float3 forward = UNITY_MATRIX_V[2].xyz;  // Camera forward in world space
-                float3 up = UNITY_MATRIX_V[1].xyz;       // Camera up in world space
-                float3 right = UNITY_MATRIX_V[0].xyz;    // Camera right in world space
+                // Get camera basis vectors (right, up, forward) in world space
+                float3 camRight = UNITY_MATRIX_V[0].xyz;  // Camera right
+                float3 camUp = UNITY_MATRIX_V[1].xyz;     // Camera up
+                float3 camForward = UNITY_MATRIX_V[2].xyz; // Camera forward
                 
-                // Create billboard rotation
+                // Extract scale from object's world matrix
+                // The scale is in the length of the basis vectors
+                float3 objectScale = float3(
+                    length(unity_ObjectToWorld._m00_m10_m20),
+                    length(unity_ObjectToWorld._m01_m11_m21),
+                    length(unity_ObjectToWorld._m02_m12_m22)
+                );
+                
+                // Apply the object's scale to the vertex position
+                // v.vertex.xy contains the quad's local coordinates (-0.5 to 0.5 for a unit quad)
+                float3 scaledVertex = float3(v.vertex.x * objectScale.x, v.vertex.y * objectScale.y, 0);
+                
+                // Rotate the scaled vertex to face the camera
+                // Use camera right/up vectors to build the billboard
                 float3 worldVertex = worldPos;
-                
-                // Add the vertex position relative to the billboard center
-                // v.vertex.x uses right vector, v.vertex.y uses up vector
-                worldVertex += v.vertex.x * right * _MainTex_ST.x;
-                worldVertex += v.vertex.y * up * _MainTex_ST.y;
+                worldVertex += scaledVertex.x * camRight;
+                worldVertex += scaledVertex.y * camUp;
                 
                 // Transform to clip space
                 o.vertex = mul(UNITY_MATRIX_VP, float4(worldVertex, 1.0));
@@ -67,7 +77,6 @@ Shader "Unlit/Billboard"
             fixed4 frag (v2f i) : SV_Target
             {
                 fixed4 col = tex2D(_MainTex, i.uv);
-                // Discard fully transparent pixels for better depth sorting
                 clip(col.a - 0.01);
                 UNITY_APPLY_FOG(i.fogCoord, col);
                 return col;
