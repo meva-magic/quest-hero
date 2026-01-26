@@ -70,7 +70,7 @@ public class DialogueManager : MonoBehaviour
         }
         else
         {
-            HideDialogue();
+            HideDialogue(); // This will hide the dialogue if there's no nextNode
         }
     }
  

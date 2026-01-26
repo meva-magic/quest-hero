@@ -44,6 +44,7 @@ public class Speaker : MonoBehaviour
         else
         {
             // Show normal dialogue
+            //HideDialogue(); // This will hide the dialogue if there's no nextNode
             DialogueManager.Instance.StartDialogue(Name, Dialogue.RootNode);
         }
     }
@@ -61,6 +62,8 @@ public class Speaker : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             inRange = false;
+
+            DialogueManager.Instance.HideDialogue();
         }
     }
 }

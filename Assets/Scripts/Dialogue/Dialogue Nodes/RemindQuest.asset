@@ -15,7 +15,7 @@ MonoBehaviour:
   dialogueText: i need my flower
   responses:
   - responseText: ok ill find it
-    nextNode: {fileID: 11400000, guid: afeb13d7fbc14b548a75697028f781a4, type: 2}
+    nextNode: {fileID: 0}
     activateQuest: 0
     questNode: {fileID: 0}
     finishQuest: 0
