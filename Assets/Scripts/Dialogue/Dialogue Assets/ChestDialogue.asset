@@ -13,3 +13,6 @@ MonoBehaviour:
   m_Name: ChestDialogue
   m_EditorClassIdentifier: 
   RootNode: {fileID: 11400000, guid: da5c60e6043c793489e67af99ed619d2, type: 2}
+  questNode: {fileID: 11400000, guid: 6db5cad3bed2ee04d88edd4756357d94, type: 2}
+  questSuccessNode: {fileID: 11400000, guid: 25137c140b68fb04da8c5846a04965b6, type: 2}
+  questReminderNode: {fileID: 11400000, guid: f256d02e31107ef4c97f924c059f4bf5, type: 2}

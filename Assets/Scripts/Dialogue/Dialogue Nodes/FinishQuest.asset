@@ -10,12 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d321b6a4364c51640af3f1c3bb472d7e, type: 3}
-  m_Name: RightAnswer
+  m_Name: FinishQuest
   m_EditorClassIdentifier: 
   dialogueText: you pass the vibe check
   responses:
   - responseText: close dialogue
     nextNode: {fileID: 11400000, guid: afeb13d7fbc14b548a75697028f781a4, type: 2}
     activateQuest: 1
-    giveReward: 0
-    rewardPrefab: {fileID: 0}
+    questNode: {fileID: 11400000, guid: 6db5cad3bed2ee04d88edd4756357d94, type: 2}
+    finishQuest: 1
+    giveReward: 1

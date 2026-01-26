@@ -10,12 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d321b6a4364c51640af3f1c3bb472d7e, type: 3}
-  m_Name: WrongAnswer
+  m_Name: RemindQuest
   m_EditorClassIdentifier: 
-  dialogueText: you dont pass the vibe check
+  dialogueText: i need my flower
   responses:
-  - responseText: close dialogue
+  - responseText: ok ill find it
     nextNode: {fileID: 11400000, guid: afeb13d7fbc14b548a75697028f781a4, type: 2}
     activateQuest: 0
-    giveReward: 1
-    rewardPrefab: {fileID: 0}
+    questNode: {fileID: 0}
+    finishQuest: 0
+    giveReward: 0

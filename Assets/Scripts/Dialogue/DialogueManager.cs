@@ -1,4 +1,3 @@
-using System.Threading;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,17 +6,14 @@ public class DialogueManager : MonoBehaviour
 {
     public static DialogueManager Instance { get; private set; }
  
-    public GameObject DialogueParent; // Main container for dialogue UI
-    public TextMeshProUGUI DialogTitleText, DialogBodyText; // Text components for title and body
-
-    public GameObject responseButtonPrefab; // Prefab Space for generating response buttons
+    public GameObject DialogueParent;
+    public TextMeshProUGUI DialogTitleText, DialogBodyText;
+    public GameObject responseButtonPrefab;
     public GameObject questButtonPrefab;
-
     public Transform responseButtonContainer;
  
     private void Awake()
     {
-        // Singleton pattern to ensure only one instance of DialogueManager
         if (Instance == null)
         {
             Instance = this;
@@ -37,11 +33,13 @@ public class DialogueManager : MonoBehaviour
         DialogTitleText.text = title;
         DialogBodyText.text = node.dialogueText;
  
+        // Clear existing buttons
         foreach (Transform child in responseButtonContainer)
         {
             Destroy(child.gameObject);
         }
  
+        // Create response buttons
         foreach (DialogueResponse response in node.responses)
         {
             GameObject buttonObj = Instantiate(responseButtonPrefab, responseButtonContainer);
@@ -51,24 +49,22 @@ public class DialogueManager : MonoBehaviour
         }
     }
  
-    // Handles response selection and triggers next dialogue node
     public void SelectResponse(DialogueResponse response, string title)
     {
-        // Check if this response should activate a quest
-        if (response.activateQuest)
+        // Handle quest activation
+        if (response.activateQuest && response.questNode != null)
         {
-            Debug.Log($"Quest activated");
-            // Later you can call: QuestManager.Instance.ActivateQuest(questID);
+            QuestManager.instance.ActivateQuest(response.questNode);
         }
 
-        if (response.giveReward)
+        // Handle quest completion
+        if (response.finishQuest)
         {
-            Debug.Log($"Quest reward granted");
-            // Later you can call: QuestManager.Instance.ActivateQuest(questID);
+            QuestManager.instance.FinishQuest();
         }
-        
-        // Check if there's a follow-up node
-        if (response.nextNode != null && !response.nextNode.IsLastNode())
+
+        // Handle next dialogue node
+        if (response.nextNode != null)
         {
             StartDialogue(title, response.nextNode);
         }
@@ -78,19 +74,16 @@ public class DialogueManager : MonoBehaviour
         }
     }
  
-    // Hide the dialogue UI
     public void HideDialogue()
     {
         DialogueParent.SetActive(false);
     }
  
-    // Show the dialogue UI
     private void ShowDialogue()
     {
         DialogueParent.SetActive(true);
     }
  
-    // Check if dialogue is currently active
     public bool IsDialogueActive()
     {
         return DialogueParent.activeSelf;

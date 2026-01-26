@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 [RequireComponent(typeof(Collider))]
 public class Inventory : MonoBehaviour
@@ -16,6 +15,53 @@ public class Inventory : MonoBehaviour
 
     [Header("State")]
     [SerializeField] SerializedDictionary<string, ItemObject> inventory = new();
+
+    // Public property to access inventory
+    public SerializedDictionary<string, ItemObject> Items => inventory;
+
+    // Public method to check if item exists
+    public bool HasItem(string itemId)
+    {
+        foreach (var item in inventory.Values)
+        {
+            if (item.id == itemId)
+                return true;
+        }
+        return false;
+    }
+
+    // Public method to get item by ID
+    public ItemObject GetItem(string itemId)
+    {
+        foreach (var item in inventory.Values)
+        {
+            if (item.id == itemId)
+                return item;
+        }
+        return null;
+    }
+
+    // Public method to remove item by ID
+    public bool RemoveItem(string itemId)
+    {
+        string itemToRemove = null;
+        
+        foreach (var kvp in inventory)
+        {
+            if (kvp.Value.id == itemId)
+            {
+                itemToRemove = kvp.Key;
+                break;
+            }
+        }
+        
+        if (itemToRemove != null)
+        {
+            DropItem(itemToRemove);
+            return true;
+        }
+        return false;
+    }
 
     private void Awake()
     {
@@ -36,7 +82,8 @@ public class Inventory : MonoBehaviour
             AddItem(droppedItem.item);
             Destroy(other.gameObject);
 
-            AudioManager.instance.Play("PickUp");
+            if (AudioManager.instance != null)
+                AudioManager.instance.Play("PickUp");
         }
     }
 
@@ -49,12 +96,15 @@ public class Inventory : MonoBehaviour
 
     public void DropItem(string inventoryId)
     {
-        var droppedItem = Instantiate(droppedItemPrefab, transform.position, Quaternion.identity).GetComponent<DroppedItem>();
-        var item = inventory.GetValueOrDefault(inventoryId);
-        droppedItem.Initialize(item);
-        inventory.Remove(inventoryId);
-        ui.RemoveUIItem(inventoryId);
-        
-        AudioManager.instance.Play("Drop");
+        if (inventory.TryGetValue(inventoryId, out ItemObject item))
+        {
+            var droppedItem = Instantiate(droppedItemPrefab, transform.position, Quaternion.identity).GetComponent<DroppedItem>();
+            droppedItem.Initialize(item);
+            inventory.Remove(inventoryId);
+            ui.RemoveUIItem(inventoryId);
+            
+            if (AudioManager.instance != null)
+                AudioManager.instance.Play("Drop");
+        }
     }
 }

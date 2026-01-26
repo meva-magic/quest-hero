@@ -7,8 +7,8 @@ public class DialogueResponse
     public DialogueNode nextNode;
     
     public bool activateQuest;
-    //public QuestNode questNode;
+    public QuestNode questNode;
 
+    public bool finishQuest;
     public bool giveReward;
-    public GameObject rewardPrefab;
 }

@@ -16,3 +16,4 @@ MonoBehaviour:
   description: "\u043C\u0438\u043B\u044B\u0439 \u0446\u0432\u0435\u0442\u043E\u0447\u0435\u043A"
   icon: {fileID: 21300000, guid: c0cb9c3d6815a92448fc400350a53e63, type: 3}
   prefab: {fileID: 8210190273271729353, guid: 1eef04694b2217e43b35c138d5a5c136, type: 3}
+  isQuestItem: 1
