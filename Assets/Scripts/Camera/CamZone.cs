@@ -4,43 +4,60 @@ using UnityEngine;
 [RequireComponent(typeof(Collider))]
 public class CamZone : MonoBehaviour
 {
-  #region Inspector
+    #region Inspector
 
-  [SerializeField]
-  private CinemachineVirtualCamera mainCam = null;
+    [SerializeField]
+    private CinemachineVirtualCamera mainCam = null;
 
-  [SerializeField]
-  private CinemachineVirtualCamera dialogueCam = null;
+    [SerializeField]
+    private CinemachineVirtualCamera dialogueCam = null;
 
-  #endregion
+    #endregion
 
+    #region MonoBehaviour
 
-  #region MonoBehaviour
+    private void Start()
+    {
+        if (mainCam != null) mainCam.enabled = true;
+        if (dialogueCam != null) dialogueCam.enabled = false;
+    }
 
-  private void Start ()
-  {
-    mainCam.enabled = true;
-    dialogueCam.enabled = false;
-  }
+    private void OnEnable()
+    {
+        // Подписываемся на события диалога
+        if (DialogueManager.Instance != null)
+        {
+            DialogueManager.Instance.OnDialogueStarted += EnableDialogueCam;
+            DialogueManager.Instance.OnDialogueEnded += EnableMainCam;
+        }
+    }
 
-  private void OnTriggerEnter (Collider other)
-  {
-    if ( other.CompareTag("Player") )
-      mainCam.enabled = false;
-      dialogueCam.enabled = true;
-  }
+    private void OnDisable()
+    {
+        // Отписываемся от событий
+        if (DialogueManager.Instance != null)
+        {
+            DialogueManager.Instance.OnDialogueStarted -= EnableDialogueCam;
+            DialogueManager.Instance.OnDialogueEnded -= EnableMainCam;
+        }
+    }
 
-  private void OnTriggerExit (Collider other)
-  {
-    if ( other.CompareTag("Player") )
-      mainCam.enabled = true;
-      dialogueCam.enabled = false;
-  }
+    private void EnableDialogueCam()
+    {
+        if (mainCam != null) mainCam.enabled = false;
+        if (dialogueCam != null) dialogueCam.enabled = true;
+    }
 
-  private void OnValidate ()
-  {
-    GetComponent<Collider>().isTrigger = true;
-  }
+    private void EnableMainCam()
+    {
+        if (mainCam != null) mainCam.enabled = true;
+        if (dialogueCam != null) dialogueCam.enabled = false;
+    }
 
-  #endregion
+    private void OnValidate()
+    {
+        GetComponent<Collider>().isTrigger = true;
+    }
+
+    #endregion
 }

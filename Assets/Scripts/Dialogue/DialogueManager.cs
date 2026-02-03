@@ -1,3 +1,4 @@
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -5,12 +6,18 @@ using UnityEngine.UI;
 public class DialogueManager : MonoBehaviour
 {
     public static DialogueManager Instance { get; private set; }
+    
+    // События для диалога
+    public event Action OnDialogueStarted;
+    public event Action OnDialogueEnded;
  
     public GameObject DialogueParent;
     public TextMeshProUGUI DialogTitleText, DialogBodyText;
     public GameObject responseButtonPrefab;
     public GameObject questButtonPrefab;
     public Transform responseButtonContainer;
+    
+    private string currentSpeakerName;
  
     private void Awake()
     {
@@ -25,25 +32,62 @@ public class DialogueManager : MonoBehaviour
  
         HideDialogue();
     }
+    
+    private void OnDestroy()
+    {
+        // Отписываемся от всех событий при уничтожении
+        OnDialogueStarted = null;
+        OnDialogueEnded = null;
+    }
  
     public void StartDialogue(string title, DialogueNode node)
     {
+        if (node == null)
+        {
+            Debug.LogWarning("DialogueManager: DialogueNode is null");
+            return;
+        }
+        
+        currentSpeakerName = title;
         ShowDialogue();
+        
+        // Вызываем событие начала диалога
+        OnDialogueStarted?.Invoke();
  
         DialogTitleText.text = title;
         DialogBodyText.text = node.dialogueText;
  
+        // Очищаем предыдущие кнопки
         foreach (Transform child in responseButtonContainer)
         {
             Destroy(child.gameObject);
         }
  
-        foreach (DialogueResponse response in node.responses)
+        // Проверяем есть ли ответы
+        if (node.responses != null && node.responses.Count > 0)
         {
+            foreach (DialogueResponse response in node.responses)
+            {
+                GameObject buttonObj = Instantiate(responseButtonPrefab, responseButtonContainer);
+                
+                // Находим TextMeshProUGUI компонент
+                TextMeshProUGUI buttonText = buttonObj.GetComponentInChildren<TextMeshProUGUI>();
+                if (buttonText != null)
+                    buttonText.text = response.responseText;
+                
+                buttonObj.GetComponent<Button>().onClick.AddListener(() => SelectResponse(response, title));
+            }
+        }
+        else
+        {
+            // Если нет ответов, добавляем кнопку "Продолжить"
             GameObject buttonObj = Instantiate(responseButtonPrefab, responseButtonContainer);
-            buttonObj.GetComponentInChildren<TextMeshProUGUI>().text = response.responseText;
- 
-            buttonObj.GetComponent<Button>().onClick.AddListener(() => SelectResponse(response, title));
+            
+            TextMeshProUGUI buttonText = buttonObj.GetComponentInChildren<TextMeshProUGUI>();
+            if (buttonText != null)
+                buttonText.text = "Продолжить";
+            
+            buttonObj.GetComponent<Button>().onClick.AddListener(() => HideDialogue());
         }
     }
  
@@ -72,6 +116,9 @@ public class DialogueManager : MonoBehaviour
     public void HideDialogue()
     {
         DialogueParent.SetActive(false);
+        
+        // Вызываем событие окончания диалога
+        OnDialogueEnded?.Invoke();
     }
  
     private void ShowDialogue()
@@ -81,6 +128,11 @@ public class DialogueManager : MonoBehaviour
  
     public bool IsDialogueActive()
     {
-        return DialogueParent.activeSelf;
+        return DialogueParent != null && DialogueParent.activeSelf;
+    }
+    
+    public string GetCurrentSpeakerName()
+    {
+        return currentSpeakerName;
     }
 }

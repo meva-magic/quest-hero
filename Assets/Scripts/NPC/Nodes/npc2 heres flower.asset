@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d321b6a4364c51640af3f1c3bb472d7e, type: 3}
+  m_Name: npc2 heres flower
+  m_EditorClassIdentifier: 
+  dialogueText: heres your flower
+  responses:
+  - responseText: thanks
+    nextNode: {fileID: 11400000, guid: 628129d26395a7a4cbeb7fce041184ea, type: 2}
+    activateQuest: 0
+    questNode: {fileID: 0}
+    finishQuest: 0
+    giveReward: 0
