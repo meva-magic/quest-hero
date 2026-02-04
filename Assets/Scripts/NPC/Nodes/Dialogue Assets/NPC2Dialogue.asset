@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ab21d0107c912054297577db733a4e4f, type: 3}
   m_Name: NPC2Dialogue
   m_EditorClassIdentifier: 
-  RootNode: {fileID: 11400000, guid: 9fa75458ac6148a41bceae603f5b5e5f, type: 2}
+  RootNode: {fileID: 11400000, guid: 628129d26395a7a4cbeb7fce041184ea, type: 2}
   questNode: {fileID: 0}
   questSuccessNode: {fileID: 0}
   questReminderNode: {fileID: 0}

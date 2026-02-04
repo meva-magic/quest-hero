@@ -54,7 +54,8 @@ public class Inventory : MonoBehaviour
         if (itemToRemove != null)
         {
             inventory.Remove(itemToRemove);
-            ui.RemoveUIItem(itemToRemove);
+            if (ui != null)
+                ui.RemoveUIItem(itemToRemove);
             return true;
         }
         
@@ -77,9 +78,7 @@ public class Inventory : MonoBehaviour
             // Check if inventory has empty slot
             if (ui != null && !ui.HasEmptySlot())
             {
-                Debug.Log("Inventory is full!");
-                // Don't pick up, just reset the item's pickup state after a delay
-                StartCoroutine(ResetPickupState(droppedItem));
+                Debug.Log("Inventory is full! Can't pick up item.");
                 return;
             }
             
@@ -92,13 +91,6 @@ public class Inventory : MonoBehaviour
         }
     }
 
-    private System.Collections.IEnumerator ResetPickupState(DroppedItem droppedItem)
-    {
-        yield return new WaitForSeconds(0.5f);
-        if (droppedItem != null)
-            droppedItem.pickedUp = false;
-    }
-
     void AddItem(ItemObject item)
     {
         if (item == null) return;
@@ -109,8 +101,9 @@ public class Inventory : MonoBehaviour
         // Try to add to UI - if fails (inventory full), remove from inventory
         if (ui != null && !ui.AddUIItem(inventoryId, item))
         {
+            // Remove from inventory since we couldn't add to UI
             inventory.Remove(inventoryId);
-            // Don't respawn - item wasn't picked up
+            Debug.Log("Failed to add item to inventory UI");
         }
     }
 
@@ -118,14 +111,24 @@ public class Inventory : MonoBehaviour
     {
         if (inventory.TryGetValue(inventoryId, out ItemObject item))
         {
-            var droppedItem = Instantiate(droppedItemPrefab, transform.position, Quaternion.identity).GetComponent<DroppedItem>();
-            if (droppedItem != null)
+            // Create dropped item
+            if (droppedItemPrefab != null)
             {
-                droppedItem.Initialize(item);
+                var droppedItem = Instantiate(droppedItemPrefab, transform.position, Quaternion.identity).GetComponent<DroppedItem>();
+                if (droppedItem != null)
+                {
+                    droppedItem.Initialize(item);
+                }
             }
-            inventory.Remove(inventoryId);
-            ui.RemoveUIItem(inventoryId);
             
+            // Remove from inventory
+            inventory.Remove(inventoryId);
+            
+            // Remove from UI
+            if (ui != null)
+                ui.RemoveUIItem(inventoryId);
+            
+            // Play sound
             if (AudioManager.instance != null)
                 AudioManager.instance.Play("Drop");
         }
