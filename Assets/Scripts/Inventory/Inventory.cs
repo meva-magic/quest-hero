@@ -55,31 +55,9 @@ public class Inventory : MonoBehaviour
         {
             inventory.Remove(itemToRemove);
             ui.RemoveUIItem(itemToRemove);
-
             return true;
         }
         
-        return false;
-    }
-
-    public bool RemoveItem(string itemId)
-    {
-        string itemToRemove = null;
-        
-        foreach (var kvp in inventory)
-        {
-            if (kvp.Value.id == itemId)
-            {
-                itemToRemove = kvp.Key;
-                break;
-            }
-        }
-        
-        if (itemToRemove != null)
-        {
-            DropItem(itemToRemove);
-            return true;
-        }
         return false;
     }
 
@@ -93,12 +71,19 @@ public class Inventory : MonoBehaviour
         if (other.CompareTag("DroppedItem"))
         {
             var droppedItem = other.GetComponent<DroppedItem>();
-            if (droppedItem.pickedUp)
+            if (droppedItem == null || droppedItem.pickedUp)
+                return;
+            
+            // Check if inventory has empty slot
+            if (ui != null && !ui.HasEmptySlot())
             {
+                Debug.Log("Inventory is full!");
+                // Don't pick up, just reset the item's pickup state after a delay
+                StartCoroutine(ResetPickupState(droppedItem));
                 return;
             }
+            
             droppedItem.pickedUp = true;
-
             AddItem(droppedItem.item);
             Destroy(other.gameObject);
 
@@ -107,11 +92,26 @@ public class Inventory : MonoBehaviour
         }
     }
 
+    private System.Collections.IEnumerator ResetPickupState(DroppedItem droppedItem)
+    {
+        yield return new WaitForSeconds(0.5f);
+        if (droppedItem != null)
+            droppedItem.pickedUp = false;
+    }
+
     void AddItem(ItemObject item)
     {
+        if (item == null) return;
+        
         var inventoryId = Guid.NewGuid().ToString();
         inventory.Add(inventoryId, item);
-        ui.AddUIItem(inventoryId, item);
+        
+        // Try to add to UI - if fails (inventory full), remove from inventory
+        if (ui != null && !ui.AddUIItem(inventoryId, item))
+        {
+            inventory.Remove(inventoryId);
+            // Don't respawn - item wasn't picked up
+        }
     }
 
     public void DropItem(string inventoryId)
@@ -119,7 +119,10 @@ public class Inventory : MonoBehaviour
         if (inventory.TryGetValue(inventoryId, out ItemObject item))
         {
             var droppedItem = Instantiate(droppedItemPrefab, transform.position, Quaternion.identity).GetComponent<DroppedItem>();
-            droppedItem.Initialize(item);
+            if (droppedItem != null)
+            {
+                droppedItem.Initialize(item);
+            }
             inventory.Remove(inventoryId);
             ui.RemoveUIItem(inventoryId);
             

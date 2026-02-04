@@ -24,14 +24,28 @@ public class GameManager : MonoBehaviour
     
     public void LoadGameScene()
     {
-        SceneManager.LoadScene(gameScene);
+        SceneManager.LoadScene(gameScene, LoadSceneMode.Single);
         ResumeGame();
+        
+        // Включаем игровую музыку
+        if (AudioManager.instance != null)
+        {
+            AudioManager.instance.Stop("MenuMusic");
+            AudioManager.instance.Play("MainTheme");
+        }
     }
     
     public void LoadMainMenu()
     {
-        SceneManager.LoadScene(mainMenuScene);
+        SceneManager.LoadScene(mainMenuScene, LoadSceneMode.Single);
         ResumeGame();
+        
+        // Включаем музыку меню
+        if (AudioManager.instance != null)
+        {
+            AudioManager.instance.Stop("MainTheme");
+            AudioManager.instance.Play("MenuMusic");
+        }
     }
     
     public void QuitGame()
@@ -48,7 +62,6 @@ public class GameManager : MonoBehaviour
         isPaused = !isPaused;
         Time.timeScale = isPaused ? 0f : 1f;
         
-        // Уведомляем меню паузы
         if (PauseMenuManager.Instance != null)
         {
             if (isPaused)

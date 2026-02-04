@@ -1,23 +1,39 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement; // ДОБАВИТЬ ЭТУ СТРОКУ
 
 public class MainMenu : MonoBehaviour
 {
+    [Header("UI References")]
     [SerializeField] private Button startButton;
     [SerializeField] private Button quitButton;
     [SerializeField] private GameObject confirmationDialog;
     
+    [Header("Confirmation Buttons")]
+    [SerializeField] private Button confirmYesButton;
+    [SerializeField] private Button confirmNoButton;
+    
     private void Start()
     {
+        // Настройка кнопок главного меню
         if (startButton != null)
             startButton.onClick.AddListener(OnStartClicked);
             
         if (quitButton != null)
             quitButton.onClick.AddListener(OnQuitClicked);
             
+        // Настройка кнопок подтверждения
+        if (confirmYesButton != null)
+            confirmYesButton.onClick.AddListener(OnConfirmQuit);
+            
+        if (confirmNoButton != null)
+            confirmNoButton.onClick.AddListener(OnCancelQuit);
+            
+        // Скрываем диалог подтверждения при старте
         if (confirmationDialog != null)
             confirmationDialog.SetActive(false);
             
+        // Восстанавливаем нормальную скорость времени
         Time.timeScale = 1f;
         
         // Воспроизводим музыку меню
@@ -37,7 +53,8 @@ public class MainMenu : MonoBehaviour
         else
         {
             // Запасной вариант
-            UnityEngine.SceneManagement.SceneManager.LoadScene("Game");
+            Debug.LogWarning("GameManager не найден, загружаем сцену напрямую");
+            SceneManager.LoadScene("Game", LoadSceneMode.Single);
         }
     }
     
@@ -47,7 +64,7 @@ public class MainMenu : MonoBehaviour
             confirmationDialog.SetActive(true);
     }
     
-    public void OnConfirmQuit()
+    private void OnConfirmQuit()
     {
         if (GameManager.Instance != null)
         {
@@ -63,7 +80,7 @@ public class MainMenu : MonoBehaviour
         }
     }
     
-    public void OnCancelQuit()
+    private void OnCancelQuit()
     {
         if (confirmationDialog != null)
             confirmationDialog.SetActive(false);
@@ -71,10 +88,17 @@ public class MainMenu : MonoBehaviour
     
     private void OnDestroy()
     {
+        // Отписываемся от событий
         if (startButton != null)
             startButton.onClick.RemoveListener(OnStartClicked);
             
         if (quitButton != null)
             quitButton.onClick.RemoveListener(OnQuitClicked);
+            
+        if (confirmYesButton != null)
+            confirmYesButton.onClick.RemoveListener(OnConfirmQuit);
+            
+        if (confirmNoButton != null)
+            confirmNoButton.onClick.RemoveListener(OnCancelQuit);
     }
 }
