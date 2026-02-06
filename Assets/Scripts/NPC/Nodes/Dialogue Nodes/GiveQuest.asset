@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d321b6a4364c51640af3f1c3bb472d7e, type: 3}
   m_Name: GiveQuest
   m_EditorClassIdentifier: 
-  dialogueText: i need you to find a flower for me
+  dialogueText: "\u043F\u0440\u0438\u043D\u0435\u0441\u0438 \u043C\u043D\u0435 \u0446\u0432\u0435\u0442\u043E\u0447\u0435\u043A"
   responses:
-  - responseText: sure ill do it
+  - responseText: "\u0445\u043E\u0440\u043E\u0448\u043E "
     nextNode: {fileID: 11400000, guid: f256d02e31107ef4c97f924c059f4bf5, type: 2}
     activateQuest: 1
     questNode: {fileID: 11400000, guid: 6db5cad3bed2ee04d88edd4756357d94, type: 2}

@@ -11,7 +11,7 @@ public class InventoryUI : MonoBehaviour, IDropHandler
 
     [Header("References")]
     [SerializeField] Inventory inventory;
-    [SerializeField] Transform uiInventoryParent;
+    [SerializeField] Transform uiInventoryParent; //T
 
     [Header("UI Panels")]
     [SerializeField] private GameObject inventoryFullPanel;
@@ -30,6 +30,9 @@ public class InventoryUI : MonoBehaviour, IDropHandler
     private GraphicRaycaster raycaster;
     private CanvasGroup draggingCanvasGroup;
     private Transform originalParent;
+    
+    // FIX ADDED: Track if panel is showing
+    private bool isPanelShowing = false;
 
     private void Start()
     {
@@ -79,6 +82,7 @@ public class InventoryUI : MonoBehaviour, IDropHandler
         
         // Make sure panel starts disabled
         inventoryFullPanel.SetActive(false);
+        isPanelShowing = false;
         Debug.Log($"Panel initialized: {inventoryFullPanel.name}, Initially disabled");
         
         // Setup close button
@@ -89,6 +93,7 @@ public class InventoryUI : MonoBehaviour, IDropHandler
                 if (inventoryFullPanel != null)
                 {
                     inventoryFullPanel.SetActive(false);
+                    isPanelShowing = false;
                     Debug.Log("Panel closed manually via button");
                 }
             });
@@ -134,6 +139,7 @@ public class InventoryUI : MonoBehaviour, IDropHandler
         Debug.Log($"ActiveSelf: {inventoryFullPanel.activeSelf}");
         Debug.Log($"ActiveInHierarchy: {inventoryFullPanel.activeInHierarchy}");
         Debug.Log($"Parent: {inventoryFullPanel.transform.parent?.name}");
+        Debug.Log($"isPanelShowing flag: {isPanelShowing}");
         
         // Check RectTransform
         RectTransform rt = inventoryFullPanel.GetComponent<RectTransform>();
@@ -405,12 +411,20 @@ public class InventoryUI : MonoBehaviour, IDropHandler
             return;
         }
         
+        // FIX ADDED: Don't show if already showing
+        if (isPanelShowing)
+        {
+            Debug.Log("Panel already showing, skipping...");
+            return;
+        }
+        
         Debug.Log($"=== SHOWING INVENTORY FULL PANEL ===");
         Debug.Log($"Panel: {inventoryFullPanel.name}");
         Debug.Log($"Before - ActiveSelf: {inventoryFullPanel.activeSelf}, ActiveInHierarchy: {inventoryFullPanel.activeInHierarchy}");
         
         // Activate the panel
         inventoryFullPanel.SetActive(true);
+        isPanelShowing = true;
         
         // Bring to front
         inventoryFullPanel.transform.SetAsLastSibling();
@@ -458,6 +472,7 @@ public class InventoryUI : MonoBehaviour, IDropHandler
         if (inventoryFullPanel != null && inventoryFullPanel.activeSelf)
         {
             inventoryFullPanel.SetActive(false);
+            isPanelShowing = false;
             Debug.Log("Inventory full panel hidden");
         }
     }

@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d321b6a4364c51640af3f1c3bb472d7e, type: 3}
   m_Name: Intro
   m_EditorClassIdentifier: 
-  dialogueText: hello there
+  dialogueText: "\u043F\u0440\u0438\u0432\u0435\u0442\u0438\u043A"
   responses:
-  - responseText: hello
+  - responseText: "\u043F\u0440\u0438\u0432\u0435\u0442"
     nextNode: {fileID: 11400000, guid: 3f1fcd3f11b73b2499da0096ae0463ac, type: 2}
     activateQuest: 0
     questNode: {fileID: 0}

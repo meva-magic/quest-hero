@@ -9,6 +9,7 @@ public class Inventory : MonoBehaviour
 
     [Header("References")]
     [SerializeField] InventoryUI ui;
+    [SerializeField] private Transform itemDropSpawnPoint; // Drag a child GameObject here as spawn point
 
     [Header("Prefabs")]
     [SerializeField] GameObject droppedItemPrefab;
@@ -79,6 +80,9 @@ public class Inventory : MonoBehaviour
             if (ui != null && !ui.HasEmptySlot())
             {
                 Debug.Log("Inventory is full! Can't pick up item.");
+                
+                // Show the inventory full panel
+                ui.ShowInventoryFullPanel();
                 return;
             }
             
@@ -104,6 +108,9 @@ public class Inventory : MonoBehaviour
             // Remove from inventory since we couldn't add to UI
             inventory.Remove(inventoryId);
             Debug.Log("Failed to add item to inventory UI");
+            
+            // Also show panel here as backup
+            ui.ShowInventoryFullPanel();
         }
     }
 
@@ -111,10 +118,14 @@ public class Inventory : MonoBehaviour
     {
         if (inventory.TryGetValue(inventoryId, out ItemObject item))
         {
-            // Create dropped item
+            // Use spawn point position if assigned, otherwise use player position
+            Vector3 dropPosition = itemDropSpawnPoint != null ? 
+                itemDropSpawnPoint.position : transform.position;
+            
+            // Create dropped item at calculated position
             if (droppedItemPrefab != null)
             {
-                var droppedItem = Instantiate(droppedItemPrefab, transform.position, Quaternion.identity).GetComponent<DroppedItem>();
+                var droppedItem = Instantiate(droppedItemPrefab, dropPosition, Quaternion.identity).GetComponent<DroppedItem>();
                 if (droppedItem != null)
                 {
                     droppedItem.Initialize(item);
@@ -131,6 +142,8 @@ public class Inventory : MonoBehaviour
             // Play sound
             if (AudioManager.instance != null)
                 AudioManager.instance.Play("Drop");
+            
+            Debug.Log($"Dropped item at position: {dropPosition}");
         }
     }
 }

@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d321b6a4364c51640af3f1c3bb472d7e, type: 3}
   m_Name: npc2 heres flower
   m_EditorClassIdentifier: 
-  dialogueText: heres your flower
+  dialogueText: "\u0432\u043E\u0442 \u0437\u0430\u0431\u0438\u0440\u0430\u0439"
   responses:
-  - responseText: thanks
+  - responseText: "\u0441\u043F\u0430\u0441\u0438\u0431\u043E"
     nextNode: {fileID: 0}
     activateQuest: 0
     questNode: {fileID: 0}

@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d321b6a4364c51640af3f1c3bb472d7e, type: 3}
   m_Name: FinishQuest
   m_EditorClassIdentifier: 
-  dialogueText: you pass the vibe check
+  dialogueText: "\u0443\u0440\u0430 \u0441\u043F\u0430\u0441\u0438\u0431\u043E"
   responses:
-  - responseText: close dialogue
+  - responseText: "\u043F\u043E\u0436\u0430\u043B\u0443\u0439\u0441\u0442\u0430"
     nextNode: {fileID: 0}
     activateQuest: 0
     questNode: {fileID: 11400000, guid: 6db5cad3bed2ee04d88edd4756357d94, type: 2}
