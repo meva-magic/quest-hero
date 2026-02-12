@@ -131,16 +131,19 @@ public class QuestManager : MonoBehaviour
         {
             GameObject player = GameObject.FindGameObjectWithTag("Player");
             Vector3 spawnPosition;
-            
+
             if (player != null)
             {
-                spawnPosition = player.transform.position + player.transform.forward * 2f + Vector3.up;
-            }
-            else
-            {
-                spawnPosition = transform.position + Vector3.forward * 2f;
+                // Always spawn at player position with -2 on Z axis
+                spawnPosition = player.transform.position + new Vector3(0, 0, -2f);
             }
             
+            else
+            {
+                // Fallback if player not found
+                spawnPosition = transform.position + new Vector3(0, 0, -2f);
+            }
+
             GameObject rewardInstance = Instantiate(rewardPrefab, spawnPosition, Quaternion.identity);
             
             DroppedItem droppedItem = rewardInstance.GetComponent<DroppedItem>();

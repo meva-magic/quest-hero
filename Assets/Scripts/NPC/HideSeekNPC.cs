@@ -41,6 +41,7 @@ public class HideSeekNPC : MonoBehaviour
     [Header("Quest")]
     [SerializeField] private ItemObject questItem;
     [SerializeField] private GameObject droppedItemPrefab;
+    [SerializeField] private Transform itemDropPoint;
     
     // Флаги
     private bool hasGivenItem = false;
@@ -234,10 +235,7 @@ public class HideSeekNPC : MonoBehaviour
         // Создаем выброшенный предмет
         if (droppedItemPrefab != null && questItem != null)
         {
-            var droppedItem = Instantiate(droppedItemPrefab, 
-                transform.position + Vector3.up, 
-                Quaternion.identity)
-                .GetComponent<DroppedItem>();
+            var droppedItem = Instantiate(droppedItemPrefab, itemDropPoint.position + Vector3.up, Quaternion.identity).GetComponent<DroppedItem>();
                 
             if (droppedItem != null)
             {

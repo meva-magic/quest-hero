@@ -10,19 +10,48 @@ public class Speaker : MonoBehaviour
     
     // Флаг для предотвращения множественных запусков диалога
     private bool isDialogueActive = false;
+    
+    // [NEW] Dialogue Indicator
+    [Header("Dialogue Indicator")]
+    [SerializeField] private GameObject dialogueIndicator; // Drag your UI indicator here
+    [SerializeField] private KeyCode dialogueKey = KeyCode.Space; // Default Space
 
     private void Start()
     {
         player = GameObject.FindGameObjectWithTag("Player");
         inRange = false;
+        
+        // [NEW] Make sure indicator starts disabled
+        if (dialogueIndicator != null)
+            dialogueIndicator.SetActive(false);
     }
  
     private void Update()
     {
-        if (inRange && Input.GetKeyDown(KeyCode.Space) && !isDialogueActive)
+        if (inRange && Input.GetKeyDown(dialogueKey) && !isDialogueActive)
         {
             SpeakTo();
         }
+        
+        // [NEW] Update indicator state every frame
+        UpdateDialogueIndicator();
+    }
+    
+    // [NEW] Simple method to update indicator visibility
+    private void UpdateDialogueIndicator()
+    {
+        if (dialogueIndicator == null) return;
+        
+        // Show indicator ONLY when:
+        // 1. Player is in range
+        // 2. Dialogue is NOT active
+        // 3. No active dialogue in the manager
+        bool shouldShow = inRange && 
+                         !isDialogueActive && 
+                         DialogueManager.Instance != null && 
+                         !DialogueManager.Instance.IsDialogueActive();
+        
+        dialogueIndicator.SetActive(shouldShow);
     }
  
     public void SpeakTo()
@@ -30,6 +59,8 @@ public class Speaker : MonoBehaviour
         if (DialogueManager.Instance.IsDialogueActive()) return;
         
         isDialogueActive = true;
+        
+        // Indicator will be hidden automatically in UpdateDialogueIndicator()
         
         if (QuestManager.instance.currentQuest != null && 
             Dialogue.questNode != null &&
@@ -59,16 +90,15 @@ public class Speaker : MonoBehaviour
     {
         yield return new WaitWhile(() => DialogueManager.Instance.IsDialogueActive());
         isDialogueActive = false;
+        // Indicator will reappear in UpdateDialogueIndicator()
     }
     
     IEnumerator WaitForQuestCompletion()
     {
         yield return new WaitWhile(() => DialogueManager.Instance.IsDialogueActive());
         
-        // После диалога успеха проверяем, нужно ли завершить квест
         if (QuestManager.instance.currentQuest != null && QuestManager.instance.goalAchieved)
         {
-            // Ищем ответ, который завершает квест
             if (Dialogue.questSuccessNode != null && Dialogue.questSuccessNode.responses != null)
             {
                 foreach (var response in Dialogue.questSuccessNode.responses)
@@ -90,7 +120,7 @@ public class Speaker : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             inRange = true;
-            // Можно добавить визуальную подсказку (например, значок "E" над NPC)
+            // Indicator will show in UpdateDialogueIndicator()
         }
     }
 

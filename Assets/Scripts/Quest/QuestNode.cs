@@ -5,8 +5,10 @@ using UnityEngine;
 public class QuestNode : ScriptableObject
 {
     public string questName;
+
     [TextArea(3, 10)]
     public string questDesctiption;
+
     public Sprite questIcon;
 
     public string questItemID;
