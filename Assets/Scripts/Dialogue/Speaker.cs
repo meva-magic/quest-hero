@@ -11,19 +11,56 @@ public class Speaker : MonoBehaviour
     // Флаг для предотвращения множественных запусков диалога
     private bool isDialogueActive = false;
     
-    // [NEW] Dialogue Indicator
+    // [NEW] Store the repeating node if found
+    private DialogueNode repeatingNode = null;
+    
+    // Dialogue Indicator
     [Header("Dialogue Indicator")]
-    [SerializeField] private GameObject dialogueIndicator; // Drag your UI indicator here
-    [SerializeField] private KeyCode dialogueKey = KeyCode.Space; // Default Space
+    [SerializeField] private GameObject dialogueIndicator;
+    [SerializeField] private KeyCode dialogueKey = KeyCode.Space;
 
     private void Start()
     {
         player = GameObject.FindGameObjectWithTag("Player");
         inRange = false;
         
-        // [NEW] Make sure indicator starts disabled
         if (dialogueIndicator != null)
             dialogueIndicator.SetActive(false);
+            
+        // [NEW] Find the repeating node in this dialogue
+        FindRepeatingNode();
+    }
+    
+    // [NEW] Search through all nodes to find the one marked as repeating
+    private void FindRepeatingNode()
+    {
+        if (Dialogue == null) return;
+        
+        // Check RootNode
+        if (Dialogue.RootNode != null && Dialogue.RootNode.isRepeatingNode)
+        {
+            repeatingNode = Dialogue.RootNode;
+            Debug.Log($"Found repeating node in RootNode: {Dialogue.RootNode.name}");
+            return;
+        }
+        
+        // Check quest nodes
+        if (Dialogue.questSuccessNode != null && Dialogue.questSuccessNode.isRepeatingNode)
+        {
+            repeatingNode = Dialogue.questSuccessNode;
+            Debug.Log($"Found repeating node in questSuccessNode: {Dialogue.questSuccessNode.name}");
+            return;
+        }
+        
+        if (Dialogue.questReminderNode != null && Dialogue.questReminderNode.isRepeatingNode)
+        {
+            repeatingNode = Dialogue.questReminderNode;
+            Debug.Log($"Found repeating node in questReminderNode: {Dialogue.questReminderNode.name}");
+            return;
+        }
+        
+        // If no repeating node found, repeatingNode stays null
+        // Dialogue will play normally from beginning each time
     }
  
     private void Update()
@@ -33,19 +70,13 @@ public class Speaker : MonoBehaviour
             SpeakTo();
         }
         
-        // [NEW] Update indicator state every frame
         UpdateDialogueIndicator();
     }
     
-    // [NEW] Simple method to update indicator visibility
     private void UpdateDialogueIndicator()
     {
         if (dialogueIndicator == null) return;
         
-        // Show indicator ONLY when:
-        // 1. Player is in range
-        // 2. Dialogue is NOT active
-        // 3. No active dialogue in the manager
         bool shouldShow = inRange && 
                          !isDialogueActive && 
                          DialogueManager.Instance != null && 
@@ -60,8 +91,15 @@ public class Speaker : MonoBehaviour
         
         isDialogueActive = true;
         
-        // Indicator will be hidden automatically in UpdateDialogueIndicator()
+        // [NEW] If we have a repeating node, always show that instead of starting from beginning
+        if (repeatingNode != null)
+        {
+            DialogueManager.Instance.StartDialogue(Name, repeatingNode);
+            StartCoroutine(WaitForDialogueEnd());
+            return;
+        }
         
+        // Normal dialogue flow - only happens if no repeating node was found
         if (QuestManager.instance.currentQuest != null && 
             Dialogue.questNode != null &&
             Dialogue.questNode == QuestManager.instance.currentQuest)
@@ -89,8 +127,19 @@ public class Speaker : MonoBehaviour
     IEnumerator WaitForDialogueEnd()
     {
         yield return new WaitWhile(() => DialogueManager.Instance.IsDialogueActive());
+        
+        // [NEW] Check if we just played a node that should become the repeating node
+        if (repeatingNode == null)
+        {
+            DialogueNode lastNode = DialogueManager.Instance.GetLastNode();
+            if (lastNode != null && lastNode.isRepeatingNode)
+            {
+                repeatingNode = lastNode;
+                Debug.Log($"Set repeating node to: {lastNode.name}");
+            }
+        }
+        
         isDialogueActive = false;
-        // Indicator will reappear in UpdateDialogueIndicator()
     }
     
     IEnumerator WaitForQuestCompletion()
@@ -112,6 +161,17 @@ public class Speaker : MonoBehaviour
             }
         }
         
+        // [NEW] Check if we should set a repeating node after quest completion
+        if (repeatingNode == null)
+        {
+            DialogueNode lastNode = DialogueManager.Instance.GetLastNode();
+            if (lastNode != null && lastNode.isRepeatingNode)
+            {
+                repeatingNode = lastNode;
+                Debug.Log($"Set repeating node after quest to: {lastNode.name}");
+            }
+        }
+        
         isDialogueActive = false;
     }
  
@@ -120,7 +180,6 @@ public class Speaker : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             inRange = true;
-            // Indicator will show in UpdateDialogueIndicator()
         }
     }
 
@@ -137,5 +196,12 @@ public class Speaker : MonoBehaviour
                 isDialogueActive = false;
             }
         }
+    }
+    
+    // [NEW] Public method to reset dialogue (if needed)
+    public void ResetDialogue()
+    {
+        repeatingNode = null;
+        FindRepeatingNode(); // Re-scan for any node marked isRepeatingNode
     }
 }

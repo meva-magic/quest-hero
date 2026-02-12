@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ab21d0107c912054297577db733a4e4f, type: 3}
+  m_Name: ChestDialogue
+  m_EditorClassIdentifier: 
+  RootNode: {fileID: 11400000, guid: da5c60e6043c793489e67af99ed619d2, type: 2}
+  questNode: {fileID: 11400000, guid: 6db5cad3bed2ee04d88edd4756357d94, type: 2}
+  questSuccessNode: {fileID: 11400000, guid: 25137c140b68fb04da8c5846a04965b6, type: 2}
+  questReminderNode: {fileID: 11400000, guid: f256d02e31107ef4c97f924c059f4bf5, type: 2}
+  completedDialogueNode: {fileID: 11400000, guid: 7bca43358c09e794bb196a67fdb105b9, type: 2}

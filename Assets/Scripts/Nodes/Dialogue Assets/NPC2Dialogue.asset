@@ -10,9 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ab21d0107c912054297577db733a4e4f, type: 3}
-  m_Name: ChestDialogue
+  m_Name: NPC2Dialogue
   m_EditorClassIdentifier: 
-  RootNode: {fileID: 11400000, guid: da5c60e6043c793489e67af99ed619d2, type: 2}
-  questNode: {fileID: 11400000, guid: 6db5cad3bed2ee04d88edd4756357d94, type: 2}
-  questSuccessNode: {fileID: 11400000, guid: 25137c140b68fb04da8c5846a04965b6, type: 2}
-  questReminderNode: {fileID: 11400000, guid: f256d02e31107ef4c97f924c059f4bf5, type: 2}
+  RootNode: {fileID: 11400000, guid: 628129d26395a7a4cbeb7fce041184ea, type: 2}
+  questNode: {fileID: 0}
+  questSuccessNode: {fileID: 0}
+  questReminderNode: {fileID: 0}
+  completedDialogueNode: {fileID: 11400000, guid: bf68b2f6844ae7c4fb9fc0421ad80250, type: 2}

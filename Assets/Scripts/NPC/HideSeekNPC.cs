@@ -47,6 +47,8 @@ public class HideSeekNPC : MonoBehaviour
     private bool hasGivenItem = false;
     private bool isInDialogue = false;
 
+    Vector3 spawnPosition;
+
     void Start()
     {
         if (agent == null) agent = GetComponent<NavMeshAgent>();
@@ -235,7 +237,9 @@ public class HideSeekNPC : MonoBehaviour
         // Создаем выброшенный предмет
         if (droppedItemPrefab != null && questItem != null)
         {
-            var droppedItem = Instantiate(droppedItemPrefab, itemDropPoint.position + Vector3.up, Quaternion.identity).GetComponent<DroppedItem>();
+            spawnPosition = player.transform.position + new Vector3(0, 0, -2f);
+
+            var droppedItem = Instantiate(droppedItemPrefab, spawnPosition, Quaternion.identity).GetComponent<DroppedItem>();
                 
             if (droppedItem != null)
             {

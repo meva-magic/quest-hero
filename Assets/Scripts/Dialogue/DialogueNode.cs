@@ -8,6 +8,8 @@ public class DialogueNode : ScriptableObject
     public string dialogueText;
     public List<DialogueResponse> responses;
 
+    public bool isRepeatingNode = false;
+
     public bool IsLastNode()
     {
         return responses == null || responses.Count <= 0;

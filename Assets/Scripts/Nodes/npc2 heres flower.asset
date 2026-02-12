@@ -15,8 +15,9 @@ MonoBehaviour:
   dialogueText: "\u0432\u043E\u0442 \u0437\u0430\u0431\u0438\u0440\u0430\u0439"
   responses:
   - responseText: "\u0441\u043F\u0430\u0441\u0438\u0431\u043E"
-    nextNode: {fileID: 0}
+    nextNode: {fileID: 11400000, guid: bf68b2f6844ae7c4fb9fc0421ad80250, type: 2}
     activateQuest: 0
     questNode: {fileID: 0}
     finishQuest: 0
     giveReward: 0
+  isRepeatingNode: 0
