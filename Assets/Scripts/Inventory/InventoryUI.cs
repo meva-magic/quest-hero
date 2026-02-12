@@ -6,22 +6,13 @@ using UnityEngine.UI;
 
 public class InventoryUI : MonoBehaviour, IDropHandler
 {
-    [Header("Prefabs")]
     [SerializeField] GameObject uiItemPrefab;
-
-    [Header("References")]
     [SerializeField] Inventory inventory;
-    [SerializeField] Transform uiInventoryParent; //T
-
-    [Header("UI Panels")]
+    [SerializeField] Transform uiInventoryParent;
     [SerializeField] private GameObject inventoryFullPanel;
     [SerializeField] private Button inventoryFullCloseButton;
-
-    [Header("Slots")]
     [SerializeField] private List<InventorySlot> slots = new List<InventorySlot>();
     [SerializeField] private int maxSlots = 3;
-
-    [Header("State")]
     [SerializeField] SerializedDictionary<string, GameObject> inventoryUI = new();
     
     private string draggingItemId = null;
@@ -30,62 +21,41 @@ public class InventoryUI : MonoBehaviour, IDropHandler
     private GraphicRaycaster raycaster;
     private CanvasGroup draggingCanvasGroup;
     private Transform originalParent;
-    
-    // FIX ADDED: Track if panel is showing
     private bool isPanelShowing = false;
 
     private void Start()
     {
-        // Get canvas references
         canvas = GetComponentInParent<Canvas>();
         raycaster = GetComponentInParent<GraphicRaycaster>();
         
-        Debug.Log($"InventoryUI Start - Panel assigned: {(inventoryFullPanel != null ? inventoryFullPanel.name : "NULL")}");
-        
-        // Initialize slots
         InitializeSlots();
-        
-        // Initialize inventory full panel
         InitializeInventoryFullPanel();
     }
 
     private void InitializeSlots()
     {
-        // If slots not manually assigned, find them
         if (slots.Count == 0 && uiInventoryParent != null)
         {
             var foundSlots = uiInventoryParent.GetComponentsInChildren<InventorySlot>();
             if (foundSlots != null)
             {
                 slots.AddRange(foundSlots);
-                Debug.Log($"Found {slots.Count} slots automatically");
             }
         }
         
-        // Limit to maxSlots
         if (slots.Count > maxSlots)
         {
             slots = slots.GetRange(0, maxSlots);
-            Debug.Log($"Limited slots to {maxSlots}");
         }
-        
-        Debug.Log($"Total slots: {slots.Count}");
     }
 
     private void InitializeInventoryFullPanel()
     {
-        if (inventoryFullPanel == null)
-        {
-            Debug.LogError("CRITICAL ERROR: inventoryFullPanel is NULL! Assign it in the Inspector.");
-            return;
-        }
+        if (inventoryFullPanel == null) return;
         
-        // Make sure panel starts disabled
         inventoryFullPanel.SetActive(false);
         isPanelShowing = false;
-        Debug.Log($"Panel initialized: {inventoryFullPanel.name}, Initially disabled");
         
-        // Setup close button
         if (inventoryFullCloseButton != null)
         {
             inventoryFullCloseButton.onClick.AddListener(() => 
@@ -94,7 +64,6 @@ public class InventoryUI : MonoBehaviour, IDropHandler
                 {
                     inventoryFullPanel.SetActive(false);
                     isPanelShowing = false;
-                    Debug.Log("Panel closed manually via button");
                 }
             });
         }
@@ -102,20 +71,6 @@ public class InventoryUI : MonoBehaviour, IDropHandler
 
     private void Update()
     {
-        // TEST: Press T to manually show panel
-        if (Input.GetKeyDown(KeyCode.T))
-        {
-            Debug.Log("=== MANUAL TEST: T key pressed ===");
-            ShowInventoryFullPanel();
-        }
-        
-        // Press Y to check panel state
-        if (Input.GetKeyDown(KeyCode.Y))
-        {
-            DebugPanelState();
-        }
-        
-        // Drag logic
         if (draggingObject != null && Input.GetMouseButton(0))
         {
             UpdateDragPosition();
@@ -123,38 +78,6 @@ public class InventoryUI : MonoBehaviour, IDropHandler
         else if (draggingObject != null && !Input.GetMouseButton(0))
         {
             EndDrag();
-        }
-    }
-
-    private void DebugPanelState()
-    {
-        if (inventoryFullPanel == null)
-        {
-            Debug.Log("Panel: NULL");
-            return;
-        }
-        
-        Debug.Log($"=== PANEL STATE ===");
-        Debug.Log($"Name: {inventoryFullPanel.name}");
-        Debug.Log($"ActiveSelf: {inventoryFullPanel.activeSelf}");
-        Debug.Log($"ActiveInHierarchy: {inventoryFullPanel.activeInHierarchy}");
-        Debug.Log($"Parent: {inventoryFullPanel.transform.parent?.name}");
-        Debug.Log($"isPanelShowing flag: {isPanelShowing}");
-        
-        // Check RectTransform
-        RectTransform rt = inventoryFullPanel.GetComponent<RectTransform>();
-        if (rt != null)
-        {
-            Debug.Log($"Position: {rt.anchoredPosition}");
-            Debug.Log($"Size: {rt.sizeDelta}");
-            Debug.Log($"Scale: {rt.localScale}");
-        }
-        
-        // Check Image
-        Image img = inventoryFullPanel.GetComponent<Image>();
-        if (img != null)
-        {
-            Debug.Log($"Image color: {img.color}, Alpha: {img.color.a}");
         }
     }
 
@@ -167,7 +90,6 @@ public class InventoryUI : MonoBehaviour, IDropHandler
         
         Vector2 mousePos = Input.mousePosition;
         
-        // Different handling for different canvas render modes
         if (canvas.renderMode == RenderMode.ScreenSpaceOverlay)
         {
             draggingRect.position = mousePos;
@@ -182,58 +104,36 @@ public class InventoryUI : MonoBehaviour, IDropHandler
 
     public bool AddUIItem(string inventoryId, ItemObject item)
     {
-        Debug.Log($"AddUIItem called - Item: {item?.name}, ID: {inventoryId}");
-        
-        // Find first empty slot
         InventorySlot emptySlot = FindEmptySlot();
         
         if (emptySlot == null)
         {
-            Debug.Log("NO EMPTY SLOTS - Inventory is FULL!");
             ShowInventoryFullPanel();
             return false;
         }
         
-        // Validate prefab
-        if (uiItemPrefab == null)
-        {
-            Debug.LogError("Cannot add item: uiItemPrefab is null!");
-            return false;
-        }
+        if (uiItemPrefab == null || item == null) return false;
         
-        if (item == null)
-        {
-            Debug.LogError("Cannot add item: ItemObject is null!");
-            return false;
-        }
-        
-        // Instantiate UI item
         GameObject itemObj = Instantiate(uiItemPrefab);
         ItemUI itemUI = itemObj.GetComponent<ItemUI>();
         
         if (itemUI == null)
         {
-            Debug.LogError("uiItemPrefab doesn't have ItemUI component!");
             Destroy(itemObj);
             return false;
         }
         
-        // Set parent and position
         itemObj.transform.SetParent(emptySlot.transform);
         itemObj.transform.localPosition = Vector3.zero;
         itemObj.transform.localScale = Vector3.one;
         
-        // Store reference
         inventoryUI.Add(inventoryId, itemObj);
         
-        // Add drag handler
         ItemDragHandler dragHandler = itemObj.AddComponent<ItemDragHandler>();
         dragHandler.Initialize(this, inventoryId);
         
-        // Initialize UI
         itemUI.Initialize(inventoryId, item, inventory.DropItem);
         
-        Debug.Log($"Item added successfully to slot: {emptySlot.name}");
         return true;
     }
 
@@ -252,16 +152,13 @@ public class InventoryUI : MonoBehaviour, IDropHandler
         draggingObject = dragObject;
         originalParent = dragObject.transform.parent;
         
-        // Bring to front
         dragObject.transform.SetAsLastSibling();
         
-        // Disable raycasts during drag
         draggingCanvasGroup = draggingObject.GetComponent<CanvasGroup>();
         if (draggingCanvasGroup == null)
             draggingCanvasGroup = draggingObject.AddComponent<CanvasGroup>();
         draggingCanvasGroup.blocksRaycasts = false;
         
-        // Update position immediately
         UpdateDragPosition();
     }
 
@@ -269,14 +166,12 @@ public class InventoryUI : MonoBehaviour, IDropHandler
     {
         if (draggingItemId == null || draggingObject == null) return;
         
-        // Re-enable raycasts
         if (draggingCanvasGroup != null)
         {
             draggingCanvasGroup.blocksRaycasts = true;
             draggingCanvasGroup = null;
         }
         
-        // Check where item was dropped
         PointerEventData pointerData = new PointerEventData(EventSystem.current)
         {
             position = Input.mousePosition
@@ -301,38 +196,28 @@ public class InventoryUI : MonoBehaviour, IDropHandler
         
         if (targetSlot != null)
         {
-            // Target slot found
             if (targetSlot.transform.childCount == 0)
             {
-                // Slot is empty, move item there
                 draggingObject.transform.SetParent(targetSlot.transform);
                 draggingObject.transform.localPosition = Vector3.zero;
-                Debug.Log($"Item moved to empty slot: {targetSlot.name}");
             }
             else
             {
-                // Slot has item, swap them
                 SwapItems(draggingItemId, targetSlot);
-                Debug.Log($"Items swapped with slot: {targetSlot.name}");
             }
         }
         else
         {
-            // No slot found - check if dropped outside inventory
             if (!IsPointerOverInventoryUI())
             {
-                // Dropped outside inventory - drop item
                 if (inventory != null)
                 {
                     inventory.DropItem(draggingItemId);
-                    Debug.Log("Item dropped outside inventory");
                 }
             }
             else
             {
-                // Dropped on inventory UI but not on a slot - return to original
                 ReturnToOriginalPosition();
-                Debug.Log("Item returned to original position");
             }
         }
         
@@ -347,7 +232,6 @@ public class InventoryUI : MonoBehaviour, IDropHandler
         {
             Transform targetItem = targetSlot.transform.GetChild(0);
             
-            // Swap parents
             draggingObject.transform.SetParent(targetSlot.transform);
             draggingObject.transform.localPosition = Vector3.zero;
             
@@ -405,66 +289,22 @@ public class InventoryUI : MonoBehaviour, IDropHandler
 
     public void ShowInventoryFullPanel()
     {
-        if (inventoryFullPanel == null)
-        {
-            Debug.LogError("ShowInventoryFullPanel: Panel is NULL!");
-            return;
-        }
+        if (inventoryFullPanel == null) return;
         
-        // FIX ADDED: Don't show if already showing
-        if (isPanelShowing)
-        {
-            Debug.Log("Panel already showing, skipping...");
-            return;
-        }
+        if (isPanelShowing) return;
         
-        Debug.Log($"=== SHOWING INVENTORY FULL PANEL ===");
-        Debug.Log($"Panel: {inventoryFullPanel.name}");
-        Debug.Log($"Before - ActiveSelf: {inventoryFullPanel.activeSelf}, ActiveInHierarchy: {inventoryFullPanel.activeInHierarchy}");
-        
-        // Activate the panel
         inventoryFullPanel.SetActive(true);
         isPanelShowing = true;
         
-        // Bring to front
         inventoryFullPanel.transform.SetAsLastSibling();
         
-        // Force canvas update
         if (canvas != null)
         {
             Canvas.ForceUpdateCanvases();
         }
         
-        Debug.Log($"After - ActiveSelf: {inventoryFullPanel.activeSelf}, ActiveInHierarchy: {inventoryFullPanel.activeInHierarchy}");
-        
-        // Check if panel has proper components
-        CheckPanelVisibility();
-        
-        // Auto-hide after 3 seconds
         CancelInvoke(nameof(HideInventoryFullPanel));
         Invoke(nameof(HideInventoryFullPanel), 3f);
-    }
-
-    private void CheckPanelVisibility()
-    {
-        if (inventoryFullPanel == null) return;
-        
-        // Check if panel has Image component
-        Image image = inventoryFullPanel.GetComponent<Image>();
-        if (image == null)
-        {
-            Debug.LogWarning("Panel has no Image component - may be invisible!");
-        }
-        else if (image.color.a <= 0.1f)
-        {
-            Debug.LogWarning($"Panel Image alpha is very low ({image.color.a}) - may be transparent!");
-        }
-        
-        // Check scale
-        if (inventoryFullPanel.transform.localScale.magnitude < 0.1f)
-        {
-            Debug.LogWarning("Panel scale is very small - may be invisible!");
-        }
     }
 
     private void HideInventoryFullPanel()
@@ -473,20 +313,16 @@ public class InventoryUI : MonoBehaviour, IDropHandler
         {
             inventoryFullPanel.SetActive(false);
             isPanelShowing = false;
-            Debug.Log("Inventory full panel hidden");
         }
     }
     
     public bool HasEmptySlot()
     {
-        bool empty = FindEmptySlot() != null;
-        Debug.Log($"HasEmptySlot check: {empty}");
-        return empty;
+        return FindEmptySlot() != null;
     }
     
     private void OnDestroy()
     {
-        // Clean up
         CancelInvoke(nameof(HideInventoryFullPanel));
         
         if (inventoryFullCloseButton != null)

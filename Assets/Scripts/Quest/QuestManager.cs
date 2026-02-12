@@ -16,7 +16,6 @@ public class QuestManager : MonoBehaviour
     public TextMeshProUGUI questDescriptionText;
     public Image questIconImage;
     
-    // Событие для обновления состояния квеста
     public delegate void QuestUpdateHandler();
     public event QuestUpdateHandler OnQuestUpdated;
 
@@ -31,12 +30,6 @@ public class QuestManager : MonoBehaviour
     
     private void OnEnable()
     {
-        // Подписываемся на события изменения инвентаря
-        if (Inventory.instance != null)
-        {
-            // В реальной реализации нужно добавить событие в Inventory.cs
-            // и подписаться на него здесь
-        }
     }
 
     public void ActivateQuest(QuestNode quest)
@@ -56,7 +49,6 @@ public class QuestManager : MonoBehaviour
         if (questIconImage != null && quest.questIcon != null)
             questIconImage.sprite = quest.questIcon;
             
-        // Вызываем событие обновления
         OnQuestUpdated?.Invoke();
     }
 
@@ -82,25 +74,14 @@ public class QuestManager : MonoBehaviour
 
     public void FinishQuest()
     {
-        if (currentQuest == null)
-        {
-            return;
-        }
+        if (currentQuest == null) return;
 
-        if (!CheckGoal())
-        {
-            Debug.LogWarning("Нельзя завершить квест - цель не достигнута");
-            return;
-        }
+        if (!CheckGoal()) return;
 
         if (Inventory.instance != null)
         {
             bool removed = Inventory.instance.RemoveItemWithoutDrop(currentQuest.questItemID);
-            if (!removed)
-            {
-                Debug.LogWarning("Не удалось удалить квестовый предмет из инвентаря");
-                return;
-            }
+            if (!removed) return;
         }
         
         if (currentQuest.rewardPrefab != null)
@@ -114,18 +95,12 @@ public class QuestManager : MonoBehaviour
         currentQuest = null;
         goalAchieved = false;
         
-        // Вызываем событие обновления
         OnQuestUpdated?.Invoke();
-        
-        Debug.Log("Квест успешно завершен!");
     }
 
     public void GiveReward(GameObject rewardPrefab)
     {
-        if (rewardPrefab == null) 
-        {
-            return;
-        }
+        if (rewardPrefab == null) return;
         
         try
         {
@@ -134,13 +109,10 @@ public class QuestManager : MonoBehaviour
 
             if (player != null)
             {
-                // Always spawn at player position with -2 on Z axis
                 spawnPosition = player.transform.position + new Vector3(0, 0, -2f);
             }
-            
             else
             {
-                // Fallback if player not found
                 spawnPosition = transform.position + new Vector3(0, 0, -2f);
             }
 
@@ -152,15 +124,11 @@ public class QuestManager : MonoBehaviour
             {
                 if (!droppedItem.autoStart && droppedItem.item == null)
                 {
-                    // Если у награды есть компонент DroppedItem, но он не настроен,
-                    // можно попытаться настроить его из QuestNode
-                    // В данном случае просто отмечаем как автостарт
                     droppedItem.autoStart = true;
                 }
             }
             else
             {
-                // Добавляем компонент DroppedItem если его нет
                 droppedItem = rewardInstance.AddComponent<DroppedItem>();
                 droppedItem.autoStart = true;
             }
@@ -168,13 +136,11 @@ public class QuestManager : MonoBehaviour
             if (AudioManager.instance != null)
                 AudioManager.instance.Play("Reward");
         }
-        catch (System.Exception e) 
-        { 
-            Debug.LogError($"Ошибка при выдаче награды: {e.Message}");
+        catch
+        {
         }
     }
     
-    // Метод для проверки и обновления состояния квеста
     public void UpdateQuestStatus()
     {
         if (currentQuest != null)

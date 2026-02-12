@@ -7,7 +7,6 @@ public class DialogueNode : ScriptableObject
     [TextArea(3, 10)]
     public string dialogueText;
     public List<DialogueResponse> responses;
-
     public bool isRepeatingNode = false;
 
     public bool IsLastNode()

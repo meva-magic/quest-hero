@@ -7,7 +7,6 @@ public class DialogueManager : MonoBehaviour
 {
     public static DialogueManager Instance { get; private set; }
     
-    // События для диалога
     public event Action OnDialogueStarted;
     public event Action OnDialogueEnded;
  
@@ -18,8 +17,6 @@ public class DialogueManager : MonoBehaviour
     public Transform responseButtonContainer;
     
     private string currentSpeakerName;
-    
-    // Track the last node that was shown
     private DialogueNode lastNodeShown = null;
  
     private void Awake()
@@ -45,52 +42,38 @@ public class DialogueManager : MonoBehaviour
  
     public void StartDialogue(string title, DialogueNode node)
     {
-        if (node == null)
-        {
-            Debug.LogWarning("DialogueManager: DialogueNode is null");
-            return;
-        }
+        if (node == null) return;
         
-        // Store this as the last node shown
         lastNodeShown = node;
-        
         currentSpeakerName = title;
         ShowDialogue();
-        
-        // Invoke dialogue started event
         OnDialogueStarted?.Invoke();
  
-        // Set title and dialogue text
         DialogTitleText.text = title;
         DialogBodyText.text = node.dialogueText;
  
-        // Clear previous response buttons
         foreach (Transform child in responseButtonContainer)
         {
             Destroy(child.gameObject);
         }
  
-        // Create response buttons
         if (node.responses != null && node.responses.Count > 0)
         {
             foreach (DialogueResponse response in node.responses)
             {
                 GameObject buttonObj = Instantiate(responseButtonPrefab, responseButtonContainer);
                 
-                // Set button text
                 TextMeshProUGUI buttonText = buttonObj.GetComponentInChildren<TextMeshProUGUI>();
                 if (buttonText != null)
                     buttonText.text = response.responseText;
                 
-                // Add click listener
                 Button button = buttonObj.GetComponent<Button>();
-                DialogueResponse capturedResponse = response; // Prevent closure issue
+                DialogueResponse capturedResponse = response;
                 button.onClick.AddListener(() => SelectResponse(capturedResponse, title));
             }
         }
         else
         {
-            // No responses - add a single "Continue" button that closes dialogue
             GameObject buttonObj = Instantiate(responseButtonPrefab, responseButtonContainer);
             
             TextMeshProUGUI buttonText = buttonObj.GetComponentInChildren<TextMeshProUGUI>();
@@ -103,21 +86,18 @@ public class DialogueManager : MonoBehaviour
  
     public void SelectResponse(DialogueResponse response, string title)
     {
-        // Activate quest if this response triggers one
         if (response.activateQuest && response.questNode != null)
         {
             if (QuestManager.instance != null)
                 QuestManager.instance.ActivateQuest(response.questNode);
         }
 
-        // Finish quest if this response completes it
         if (response.finishQuest)
         {
             if (QuestManager.instance != null)
                 QuestManager.instance.FinishQuest();
         }
 
-        // Go to next node or close dialogue
         if (response.nextNode != null)
         {
             StartDialogue(title, response.nextNode);
@@ -133,7 +113,6 @@ public class DialogueManager : MonoBehaviour
         if (DialogueParent != null)
             DialogueParent.SetActive(false);
         
-        // Invoke dialogue ended event
         OnDialogueEnded?.Invoke();
     }
  
@@ -153,13 +132,11 @@ public class DialogueManager : MonoBehaviour
         return currentSpeakerName;
     }
     
-    // Get the last node that was displayed
     public DialogueNode GetLastNode()
     {
         return lastNodeShown;
     }
     
-    // Force end dialogue (useful for when player walks away)
     public void ForceEndDialogue()
     {
         if (IsDialogueActive())
@@ -168,7 +145,6 @@ public class DialogueManager : MonoBehaviour
         }
     }
     
-    // Clear all response buttons (useful for resetting)
     public void ClearResponseButtons()
     {
         if (responseButtonContainer != null)
@@ -180,7 +156,6 @@ public class DialogueManager : MonoBehaviour
         }
     }
     
-    // Reset the dialogue manager state
     public void ResetDialogueState()
     {
         currentSpeakerName = null;

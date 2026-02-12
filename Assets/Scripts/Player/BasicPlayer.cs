@@ -5,14 +5,9 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(Collider))]
 public class BasicPlayer : MonoBehaviour
 {
-    [Header("References")]
     Rigidbody rb;
-    
-    [Header("Settings")]
     [SerializeField]
     float moveSpeed = 10.0f;
-    
-    [Header("State")]
     Vector3 moveInput;
     bool canMove = true;
     
@@ -20,7 +15,6 @@ public class BasicPlayer : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         
-        // Подписываемся на события диалога
         if (DialogueManager.Instance != null)
         {
             DialogueManager.Instance.OnDialogueStarted += DisableMovement;
@@ -30,7 +24,6 @@ public class BasicPlayer : MonoBehaviour
     
     void Update()
     {
-        // Проверяем паузу
         if (GameManager.Instance != null && GameManager.Instance.IsPaused())
         {
             if (canMove)
@@ -41,7 +34,6 @@ public class BasicPlayer : MonoBehaviour
     
     void OnDestroy()
     {
-        // Отписываемся от событий
         if (DialogueManager.Instance != null)
         {
             DialogueManager.Instance.OnDialogueStarted -= DisableMovement;

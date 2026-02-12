@@ -4,17 +4,10 @@ using UnityEngine;
 [RequireComponent(typeof(Collider))]
 public class CamZone : MonoBehaviour
 {
-    #region Inspector
-
     [SerializeField]
     private CinemachineVirtualCamera mainCam = null;
-
     [SerializeField]
     private CinemachineVirtualCamera dialogueCam = null;
-
-    #endregion
-
-    #region MonoBehaviour
 
     private void Start()
     {
@@ -24,7 +17,6 @@ public class CamZone : MonoBehaviour
 
     private void OnEnable()
     {
-        // Подписываемся на события диалога
         if (DialogueManager.Instance != null)
         {
             DialogueManager.Instance.OnDialogueStarted += EnableDialogueCam;
@@ -34,7 +26,6 @@ public class CamZone : MonoBehaviour
 
     private void OnDisable()
     {
-        // Отписываемся от событий
         if (DialogueManager.Instance != null)
         {
             DialogueManager.Instance.OnDialogueStarted -= EnableDialogueCam;
@@ -58,6 +49,4 @@ public class CamZone : MonoBehaviour
     {
         GetComponent<Collider>().isTrigger = true;
     }
-
-    #endregion
 }

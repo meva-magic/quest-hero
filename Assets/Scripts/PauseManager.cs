@@ -6,7 +6,6 @@ public class PauseMenuManager : MonoBehaviour
 {
     public static PauseMenuManager Instance { get; private set; }
     
-    [Header("UI References")]
     [SerializeField] private GameObject pausePanel;
     [SerializeField] private Button pauseButton;
     [SerializeField] private Button resumeButton;
@@ -30,7 +29,6 @@ public class PauseMenuManager : MonoBehaviour
     
     private void Start()
     {
-        // Настройка кнопок
         if (pauseButton != null)
             pauseButton.onClick.AddListener(OnPauseClicked);
             
@@ -46,7 +44,6 @@ public class PauseMenuManager : MonoBehaviour
         if (confirmNoButton != null)
             confirmNoButton.onClick.AddListener(OnConfirmNo);
         
-        // Скрыть панели
         if (pausePanel != null)
             pausePanel.SetActive(false);
             
@@ -62,7 +59,6 @@ public class PauseMenuManager : MonoBehaviour
         }
         else
         {
-            // Запасной вариант
             TogglePauseManual();
         }
     }

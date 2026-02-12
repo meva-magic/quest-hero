@@ -4,13 +4,9 @@ using UnityEngine;
 [RequireComponent(typeof(Collider))]
 public class DroppedItem : MonoBehaviour
 {
-    [Header("Settings")]
     public bool autoStart;
-
     [SerializeField]
     float enabledPickupDelay = 3.0f;
-
-    [Header("State")]
     public ItemObject item;
     public bool pickedUp = false;
 

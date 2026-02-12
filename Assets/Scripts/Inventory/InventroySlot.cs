@@ -9,6 +9,5 @@ public class InventorySlot : MonoBehaviour, IDropHandler
     
     public void OnDrop(PointerEventData eventData)
     {
-        // This is now handled by InventoryUI
     }
 }

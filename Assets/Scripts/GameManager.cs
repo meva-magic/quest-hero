@@ -27,7 +27,6 @@ public class GameManager : MonoBehaviour
         SceneManager.LoadScene(gameScene, LoadSceneMode.Single);
         ResumeGame();
         
-        // Включаем игровую музыку
         if (AudioManager.instance != null)
         {
             AudioManager.instance.Stop("MenuMusic");
@@ -40,7 +39,6 @@ public class GameManager : MonoBehaviour
         SceneManager.LoadScene(mainMenuScene, LoadSceneMode.Single);
         ResumeGame();
         
-        // Включаем музыку меню
         if (AudioManager.instance != null)
         {
             AudioManager.instance.Stop("MainTheme");

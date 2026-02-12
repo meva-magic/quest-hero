@@ -22,11 +22,9 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
     
     public void OnDrag(PointerEventData eventData)
     {
-        // Drag is handled in InventoryUI.Update()
     }
     
     public void OnEndDrag(PointerEventData eventData)
     {
-        // End drag is handled in InventoryUI
     }
 }

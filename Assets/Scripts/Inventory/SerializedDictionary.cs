@@ -7,7 +7,6 @@ public class SerializedDictionary<TKey, TValue> : Dictionary<TKey, TValue>, ISer
 {
     [SerializeField]
     private List<TKey> keys = new List<TKey>();
-    
     [SerializeField]
     private List<TValue> values = new List<TValue>();
     
@@ -27,10 +26,7 @@ public class SerializedDictionary<TKey, TValue> : Dictionary<TKey, TValue>, ISer
     {
         this.Clear();
         
-        if (keys.Count != values.Count)
-        {
-            Debug.LogError($"Mismatch in key/value counts: {keys.Count} keys, {values.Count} values");
-        }
+        if (keys.Count != values.Count) return;
         
         for (int i = 0; i < Math.Min(keys.Count, values.Count); i++)
         {

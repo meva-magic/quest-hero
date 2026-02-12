@@ -5,48 +5,26 @@ using System.Collections.Generic;
 
 public enum NPCState
 {
-    Hiding,          // Прячется
-    Running,         // Убегает от игрока
-    Taunting         // Подходит поближе
+    Hiding,
+    Running,
+    Taunting
 }
 
 public class HideSeekNPC : MonoBehaviour
 {
-    // Компоненты
-    [Header("Components")]
     [SerializeField] private NavMeshAgent agent;
     private Transform player;
-    
-    // Состояния
-    [Header("States")]
     [SerializeField] private NPCState currentState = NPCState.Hiding;
-    
-    // Настройки
-    [Header("Settings")]
     [SerializeField] private float detectionRange = 10f;
     [SerializeField] private float tauntingDelay = 30f;
-    
-    // Диалог
-    [Header("Dialogue")]
     [SerializeField] private Dialogue dialogueAsset;
-    
-    // UI для награды
-    [Header("UI")]
-    [SerializeField] private GameObject rewardIcon; // UI Image (активен пока есть награда)
-    
-    // Таймеры
+    [SerializeField] private GameObject rewardIcon;
     private float timeSinceLastFound;
-    
-    // Квестовый предмет
-    [Header("Quest")]
     [SerializeField] private ItemObject questItem;
     [SerializeField] private GameObject droppedItemPrefab;
     [SerializeField] private Transform itemDropPoint;
-    
-    // Флаги
     private bool hasGivenItem = false;
     private bool isInDialogue = false;
-
     Vector3 spawnPosition;
 
     void Start()
@@ -54,7 +32,6 @@ public class HideSeekNPC : MonoBehaviour
         if (agent == null) agent = GetComponent<NavMeshAgent>();
         player = GameObject.FindGameObjectWithTag("Player").transform;
         
-        // Активируем UI награды по умолчанию
         if (rewardIcon != null)
             rewardIcon.SetActive(true);
             
@@ -78,7 +55,6 @@ public class HideSeekNPC : MonoBehaviour
                 break;
         }
         
-        // Обновляем таймер для перехода в таунтинг
         timeSinceLastFound += Time.deltaTime;
         if (timeSinceLastFound > tauntingDelay && currentState == NPCState.Hiding)
         {
@@ -96,7 +72,6 @@ public class HideSeekNPC : MonoBehaviour
     
     void UpdateHiding()
     {
-        // Движение к случайной точке
         if (agent.remainingDistance <= agent.stoppingDistance)
         {
             if (RandomPoint(transform.position, 10f, out Vector3 point))
@@ -105,7 +80,6 @@ public class HideSeekNPC : MonoBehaviour
             }
         }
         
-        // Проверка на обнаружение игроком
         if (Vector3.Distance(transform.position, player.position) < detectionRange)
         {
             StartRunning();
@@ -114,7 +88,6 @@ public class HideSeekNPC : MonoBehaviour
 
     void UpdateRunning()
     {
-        // Бег от игрока
         Vector3 runDirection = (transform.position - player.position).normalized;
         Vector3 runPoint = transform.position + runDirection * 15f;
         
@@ -124,7 +97,6 @@ public class HideSeekNPC : MonoBehaviour
         }
         else
         {
-            // Проверяем, нужно ли сменить точку бегства
             float distanceToRunPoint = Vector3.Distance(agent.destination, player.position);
             if (distanceToRunPoint < detectionRange)
             {
@@ -135,10 +107,9 @@ public class HideSeekNPC : MonoBehaviour
 
     void UpdateTaunting()
     {
-        // Приближение к игроку для дразнения
         if (Vector3.Distance(transform.position, player.position) < detectionRange / 2)
         {
-            StartRunning(); // После приближения убегаем
+            StartRunning();
         }
         else
         {
@@ -146,14 +117,12 @@ public class HideSeekNPC : MonoBehaviour
         }
     }
 
-    // Методы переключения состояний
     void StartHiding()
     {
         currentState = NPCState.Hiding;
         timeSinceLastFound = 0f;
         agent.isStopped = false;
         
-        // Ищем новую точку
         if (RandomPoint(transform.position, 10f, out Vector3 point))
         {
             agent.SetDestination(point);
@@ -166,7 +135,6 @@ public class HideSeekNPC : MonoBehaviour
         timeSinceLastFound = 0f;
         agent.isStopped = false;
         
-        // Бежим от игрока
         Vector3 runDirection = (transform.position - player.position).normalized;
         Vector3 runPoint = transform.position + runDirection * 15f;
         agent.SetDestination(runPoint);
@@ -179,7 +147,6 @@ public class HideSeekNPC : MonoBehaviour
         agent.SetDestination(player.position);
     }
     
-    // Вспомогательные методы
     bool RandomPoint(Vector3 center, float range, out Vector3 result)
     {
         Vector3 randomPoint = center + Random.insideUnitSphere * range;
@@ -192,7 +159,6 @@ public class HideSeekNPC : MonoBehaviour
         return false;
     }
     
-    // Диалог с игроком
     void StartDialogueWithPlayer()
     {
         isInDialogue = true;
@@ -205,7 +171,6 @@ public class HideSeekNPC : MonoBehaviour
         }
         else
         {
-            // Если диалог не настроен, просто выдаем предмет
             GiveQuestItem();
             Invoke(nameof(EndDialogue), 1f);
         }
@@ -215,7 +180,6 @@ public class HideSeekNPC : MonoBehaviour
     {
         yield return new WaitWhile(() => DialogueManager.Instance.IsDialogueActive());
         
-        // После диалога выдаем предмет
         if (!hasGivenItem)
         {
             GiveQuestItem();
@@ -230,15 +194,12 @@ public class HideSeekNPC : MonoBehaviour
         
         hasGivenItem = true;
         
-        // Скрываем UI награды
         if (rewardIcon != null)
             rewardIcon.SetActive(false);
         
-        // Создаем выброшенный предмет
         if (droppedItemPrefab != null && questItem != null)
         {
             spawnPosition = player.transform.position + new Vector3(0, 0, -2f);
-
             var droppedItem = Instantiate(droppedItemPrefab, spawnPosition, Quaternion.identity).GetComponent<DroppedItem>();
                 
             if (droppedItem != null)
@@ -246,7 +207,6 @@ public class HideSeekNPC : MonoBehaviour
                 droppedItem.Initialize(questItem);
             }
             
-            // Воспроизводим звук
             if (AudioManager.instance != null)
                 AudioManager.instance.Play("Drop");
         }
@@ -255,31 +215,8 @@ public class HideSeekNPC : MonoBehaviour
     void EndDialogue()
     {
         isInDialogue = false;
-        StartRunning(); // После диалога убегаем
+        StartRunning();
     }
     
     public bool HasGivenItem() => hasGivenItem;
-    
-    // Для отладки в редакторе
-    void OnDrawGizmosSelected()
-    {
-        // Отображаем радиус обнаружения
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, detectionRange);
-        
-        // Отображаем текущее состояние
-        switch (currentState)
-        {
-            case NPCState.Hiding:
-                Gizmos.color = Color.green;
-                break;
-            case NPCState.Running:
-                Gizmos.color = Color.red;
-                break;
-            case NPCState.Taunting:
-                Gizmos.color = Color.magenta;
-                break;
-        }
-        Gizmos.DrawWireSphere(transform.position, 1f);
-    }
 }

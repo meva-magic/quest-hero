@@ -14,21 +14,14 @@ public class LoopMovement : MonoBehaviour
     }
 
     [SerializeField] Behaviours currentState;
-
     private NavMeshAgent agent;
     private GameObject player;
-
     private Vector3 target;
-
     [SerializeField] private float stoppingDistance = 0.1f;
-
     [SerializeField] private List<Transform> waypoints;
-
     private int currentWaypoint;
-
     [SerializeField] private bool pauseAtPoint;
     [SerializeField] private float minPause, maxPause;
-
     private Coroutine moveCoroutine;
 
     private void Awake()
@@ -40,7 +33,6 @@ public class LoopMovement : MonoBehaviour
     {
         agent = GetComponent<NavMeshAgent>();
         player = GameObject.FindGameObjectWithTag("Player");
-
         currentState = Behaviours.Patrol;
 
         if (waypoints.Count != 0)
@@ -50,21 +42,7 @@ public class LoopMovement : MonoBehaviour
 
         StartPatrolling();
     }
-/*
-    private void Update()
-    {
-        switch (currentState)
-        {
-            case Behaviours.Patrol:
-                // No need for state change check in Update since we handle it in triggers
-                break;
 
-            case Behaviours.Listen:
-                // Just stay in listen mode, movement is already stopped
-                break;
-        }
-    }
-*/
     private void StartPatrolling()
     {
         if (moveCoroutine != null)
@@ -123,7 +101,6 @@ public class LoopMovement : MonoBehaviour
                 
                 UpdateNextWaypoint();
             }
-
             else
             {
                 yield break;

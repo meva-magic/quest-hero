@@ -6,7 +6,6 @@ using TMPro;
 [RequireComponent(typeof(Button))]
 public class ItemUI : MonoBehaviour
 {
-    [Header("References")]
     [SerializeField]
     Image image;
     [SerializeField]

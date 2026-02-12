@@ -8,7 +8,6 @@ public class DialogueResponse
     
     public bool activateQuest;
     public QuestNode questNode;
-
     public bool finishQuest;
     public bool giveReward;
 }
