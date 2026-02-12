@@ -114,6 +114,7 @@ public class InventoryUI : MonoBehaviour, IDropHandler
         
         if (uiItemPrefab == null || item == null) return false;
         
+        // Original working method - Instantiate first, then set parent
         GameObject itemObj = Instantiate(uiItemPrefab);
         ItemUI itemUI = itemObj.GetComponent<ItemUI>();
         
@@ -123,8 +124,10 @@ public class InventoryUI : MonoBehaviour, IDropHandler
             return false;
         }
         
+        // Set parent and reset transform
         itemObj.transform.SetParent(emptySlot.transform);
         itemObj.transform.localPosition = Vector3.zero;
+        itemObj.transform.localRotation = Quaternion.identity;
         itemObj.transform.localScale = Vector3.one;
         
         inventoryUI.Add(inventoryId, itemObj);
@@ -200,6 +203,7 @@ public class InventoryUI : MonoBehaviour, IDropHandler
             {
                 draggingObject.transform.SetParent(targetSlot.transform);
                 draggingObject.transform.localPosition = Vector3.zero;
+                draggingObject.transform.localRotation = Quaternion.identity;
             }
             else
             {
@@ -234,9 +238,11 @@ public class InventoryUI : MonoBehaviour, IDropHandler
             
             draggingObject.transform.SetParent(targetSlot.transform);
             draggingObject.transform.localPosition = Vector3.zero;
+            draggingObject.transform.localRotation = Quaternion.identity;
             
             targetItem.SetParent(originalParent);
             targetItem.localPosition = Vector3.zero;
+            targetItem.localRotation = Quaternion.identity;
         }
     }
 
@@ -268,6 +274,7 @@ public class InventoryUI : MonoBehaviour, IDropHandler
         {
             draggingObject.transform.SetParent(originalParent);
             draggingObject.transform.localPosition = Vector3.zero;
+            draggingObject.transform.localRotation = Quaternion.identity;
         }
     }
 

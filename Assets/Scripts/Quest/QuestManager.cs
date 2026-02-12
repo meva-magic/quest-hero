@@ -16,6 +16,8 @@ public class QuestManager : MonoBehaviour
     public TextMeshProUGUI questDescriptionText;
     public Image questIconImage;
     
+    [SerializeField] private GameObject wallToDisable;
+    
     public delegate void QuestUpdateHandler();
     public event QuestUpdateHandler OnQuestUpdated;
 
@@ -49,7 +51,17 @@ public class QuestManager : MonoBehaviour
         if (questIconImage != null && quest.questIcon != null)
             questIconImage.sprite = quest.questIcon;
             
+        DisableWall();
+            
         OnQuestUpdated?.Invoke();
+    }
+
+    private void DisableWall()
+    {
+        if (wallToDisable != null)
+        {
+            wallToDisable.SetActive(false);
+        }
     }
 
     public bool CheckGoal()
