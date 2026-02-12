@@ -1,65 +1,174 @@
 using UnityEngine;
 using UnityEngine.AI;
 using System.Collections;
-using System.Collections.Generic;
 
 public enum NPCState
 {
     Hiding,
     Running,
-    Taunting
+    Taunting,
+    Disappearing
 }
 
 public class HideSeekNPC : MonoBehaviour
 {
+    [Header("Components")]
     [SerializeField] private NavMeshAgent agent;
-    private Transform player;
-    [SerializeField] private NPCState currentState = NPCState.Hiding;
-    [SerializeField] private float detectionRange = 10f;
-    [SerializeField] private float tauntingDelay = 30f;
     [SerializeField] private Dialogue dialogueAsset;
-    [SerializeField] private GameObject rewardIcon;
-    private float timeSinceLastFound;
     [SerializeField] private ItemObject questItem;
     [SerializeField] private GameObject droppedItemPrefab;
-    [SerializeField] private Transform itemDropPoint;
+    [SerializeField] private GameObject rewardIcon;
+    
+    [Header("=== STATE SETTINGS ===")]
+    public NPCState currentState = NPCState.Hiding;
+    
+    [Header("--- Hide State Settings ---")]
+    [SerializeField] private float hideSpeed = 2f;
+    [SerializeField] private float wanderRange = 10f;
+    [SerializeField] private float wobbleStrength = 0.5f;
+    
+    [Header("--- Run State Settings ---")]
+    [SerializeField] private float sprintSpeed = 7f;
+    [SerializeField] private float jogSpeed = 4f;
+    [SerializeField] private float sprintDuration = 2.5f;
+    [SerializeField] private float runAwayDistance = 15f;
+    
+    [Header("--- Taunt State Settings ---")]
+    [SerializeField] private float tauntSpeed = 5f;
+    [SerializeField] private float tauntWobbleStrength = 0.8f;
+    [SerializeField] private float tauntStopDistance = 3f;
+    
+    [Header("--- Disappear State Settings ---")]
+    [SerializeField] private float disappearSpeed = 12f;
+    [SerializeField] private float disappearDistance = 30f;
+    [SerializeField] private bool disableGameObject = true;
+    
+    [Header("--- Detection Settings ---")]
+    [SerializeField] private float detectionRange = 10f;
+    [SerializeField] private float safeDistance = 15f;
+    [SerializeField] private float tauntingDelay = 30f;
+    
+    [Header("--- Quest Settings ---")]
+    [SerializeField] private float itemSpawnOffsetZ = -2f;
+    
+    private float timeSinceLastFound;
     private bool hasGivenItem = false;
     private bool isInDialogue = false;
-    Vector3 spawnPosition;
-
+    private Transform player;
+    
+    // State scripts
+    private HideState hideState;
+    private RunState runState;
+    private TauntState tauntState;
+    private DisappearState disappearState;
+    
     void Start()
     {
         if (agent == null) agent = GetComponent<NavMeshAgent>();
         player = GameObject.FindGameObjectWithTag("Player").transform;
+        
+        // Add state components
+        hideState = gameObject.AddComponent<HideState>();
+        runState = gameObject.AddComponent<RunState>();
+        tauntState = gameObject.AddComponent<TauntState>();
+        disappearState = gameObject.AddComponent<DisappearState>();
+        
+        // Initialize states with references
+        hideState.Initialize(this, agent, player, hideSpeed, wanderRange, wobbleStrength);
+        runState.Initialize(this, agent, player, sprintSpeed, jogSpeed, sprintDuration, runAwayDistance);
+        tauntState.Initialize(this, agent, player, tauntSpeed, tauntWobbleStrength, tauntStopDistance);
+        disappearState.Initialize(this, agent, player, disappearSpeed, disappearDistance, disableGameObject);
         
         if (rewardIcon != null)
             rewardIcon.SetActive(true);
             
         StartHiding();
     }
-
+    
     void Update()
     {
         if (isInDialogue) return;
         
+        timeSinceLastFound += Time.deltaTime;
+        
         switch (currentState)
         {
             case NPCState.Hiding:
-                UpdateHiding();
+                hideState.UpdateState();
+                CheckTransitionsFromHide();
                 break;
             case NPCState.Running:
-                UpdateRunning();
+                runState.UpdateState();
+                CheckTransitionsFromRun();
                 break;
             case NPCState.Taunting:
-                UpdateTaunting();
+                tauntState.UpdateState();
+                CheckTransitionsFromTaunt();
+                break;
+            case NPCState.Disappearing:
+                disappearState.UpdateState();
                 break;
         }
+    }
+    
+    void CheckTransitionsFromHide()
+    {
+        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
         
-        timeSinceLastFound += Time.deltaTime;
-        if (timeSinceLastFound > tauntingDelay && currentState == NPCState.Hiding)
+        if (distanceToPlayer < detectionRange)
+        {
+            StartRunning();
+        }
+        else if (timeSinceLastFound > tauntingDelay)
         {
             StartTaunting();
         }
+    }
+    
+    void CheckTransitionsFromRun()
+    {
+        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
+        
+        if (distanceToPlayer > safeDistance)
+        {
+            StartHiding();
+        }
+    }
+    
+    void CheckTransitionsFromTaunt()
+    {
+        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
+        
+        if (distanceToPlayer < detectionRange / 2)
+        {
+            StartRunning();
+        }
+    }
+    
+    public void StartHiding()
+    {
+        currentState = NPCState.Hiding;
+        timeSinceLastFound = 0f;
+        hideState.EnterState();
+    }
+    
+    public void StartRunning()
+    {
+        currentState = NPCState.Running;
+        timeSinceLastFound = 0f;
+        runState.EnterState();
+    }
+    
+    public void StartTaunting()
+    {
+        currentState = NPCState.Taunting;
+        tauntState.EnterState();
+    }
+    
+    public void StartDisappearing()
+    {
+        currentState = NPCState.Disappearing;
+        disappearState.EnterState();
     }
     
     void OnTriggerEnter(Collider other)
@@ -68,95 +177,6 @@ public class HideSeekNPC : MonoBehaviour
         {
             StartDialogueWithPlayer();
         }
-    }
-    
-    void UpdateHiding()
-    {
-        if (agent.remainingDistance <= agent.stoppingDistance)
-        {
-            if (RandomPoint(transform.position, 10f, out Vector3 point))
-            {
-                agent.SetDestination(point);
-            }
-        }
-        
-        if (Vector3.Distance(transform.position, player.position) < detectionRange)
-        {
-            StartRunning();
-        }
-    }
-
-    void UpdateRunning()
-    {
-        Vector3 runDirection = (transform.position - player.position).normalized;
-        Vector3 runPoint = transform.position + runDirection * 15f;
-        
-        if (Vector3.Distance(transform.position, player.position) > detectionRange * 1.5f)
-        {
-            StartHiding();
-        }
-        else
-        {
-            float distanceToRunPoint = Vector3.Distance(agent.destination, player.position);
-            if (distanceToRunPoint < detectionRange)
-            {
-                agent.SetDestination(runPoint);
-            }
-        }
-    }
-
-    void UpdateTaunting()
-    {
-        if (Vector3.Distance(transform.position, player.position) < detectionRange / 2)
-        {
-            StartRunning();
-        }
-        else
-        {
-            agent.SetDestination(player.position);
-        }
-    }
-
-    void StartHiding()
-    {
-        currentState = NPCState.Hiding;
-        timeSinceLastFound = 0f;
-        agent.isStopped = false;
-        
-        if (RandomPoint(transform.position, 10f, out Vector3 point))
-        {
-            agent.SetDestination(point);
-        }
-    }
-
-    void StartRunning()
-    {
-        currentState = NPCState.Running;
-        timeSinceLastFound = 0f;
-        agent.isStopped = false;
-        
-        Vector3 runDirection = (transform.position - player.position).normalized;
-        Vector3 runPoint = transform.position + runDirection * 15f;
-        agent.SetDestination(runPoint);
-    }
-
-    void StartTaunting()
-    {
-        currentState = NPCState.Taunting;
-        agent.isStopped = false;
-        agent.SetDestination(player.position);
-    }
-    
-    bool RandomPoint(Vector3 center, float range, out Vector3 result)
-    {
-        Vector3 randomPoint = center + Random.insideUnitSphere * range;
-        if (NavMesh.SamplePosition(randomPoint, out NavMeshHit hit, 1.0f, NavMesh.AllAreas))
-        {
-            result = hit.position;
-            return true;
-        }
-        result = Vector3.zero;
-        return false;
     }
     
     void StartDialogueWithPlayer()
@@ -199,8 +219,10 @@ public class HideSeekNPC : MonoBehaviour
         
         if (droppedItemPrefab != null && questItem != null)
         {
-            spawnPosition = player.transform.position + new Vector3(0, 0, -2f);
-            var droppedItem = Instantiate(droppedItemPrefab, spawnPosition, Quaternion.identity).GetComponent<DroppedItem>();
+            Vector3 spawnPosition = player.position + new Vector3(0, 0, itemSpawnOffsetZ);
+                
+            var droppedItem = Instantiate(droppedItemPrefab, spawnPosition, Quaternion.identity)
+                .GetComponent<DroppedItem>();
                 
             if (droppedItem != null)
             {
@@ -215,8 +237,17 @@ public class HideSeekNPC : MonoBehaviour
     void EndDialogue()
     {
         isInDialogue = false;
-        StartRunning();
+        
+        if (hasGivenItem)
+        {
+            StartDisappearing();
+        }
+        else
+        {
+            StartRunning();
+        }
     }
     
     public bool HasGivenItem() => hasGivenItem;
+    public Transform GetPlayer() => player;
 }
