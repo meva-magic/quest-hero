@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.AI;
 using System.Collections;
+using System.Collections.Generic;
 
 public enum NPCState
 {
@@ -22,6 +23,16 @@ public class HideSeekNPC : MonoBehaviour
     
     [Header("=== BEHAVIOR ===")]
     public NPCState currentState = NPCState.Idle;
+    
+    [Header("State Dialogue Lines")]
+    [SerializeField] private List<string> idleLines = new List<string>();
+    [SerializeField] private List<string> findLines = new List<string>();
+    [SerializeField] private List<string> runLines = new List<string>();
+    [SerializeField] private List<string> dieLines = new List<string>();
+    
+    [Header("Dialogue Settings")]
+    [SerializeField] private float dialogueInterval = 3f; // Shows random line every X seconds
+    [SerializeField] private bool showStateDialogue = true;
     
     [Header("Speeds")]
     [SerializeField] private float wanderSpeed = 6f;
@@ -50,6 +61,8 @@ public class HideSeekNPC : MonoBehaviour
     private bool isRunningFast = true;
     private float runTimer;
     
+    private Coroutine dialogueRoutine;
+
     void Start()
     {
         if (agent == null) agent = GetComponent<NavMeshAgent>();
@@ -233,27 +246,45 @@ public class HideSeekNPC : MonoBehaviour
     void StartIdle()
     {
         if (currentState == NPCState.Die) return;
+        
+        NPCState previousState = currentState;
         currentState = NPCState.Idle;
         agent.isStopped = false;
         timeSinceLastPlayerContact = 0f;
+        
+        // Start state dialogue if state changed
+        if (showStateDialogue && previousState != currentState)
+            StartStateDialogue(NPCState.Idle);
     }
     
     void StartFind()
     {
         if (currentState == NPCState.Die) return;
+        
+        NPCState previousState = currentState;
         currentState = NPCState.Find;
         agent.isStopped = false;
         timeSinceLastPlayerContact = 0f;
+        
+        // Start state dialogue if state changed
+        if (showStateDialogue && previousState != currentState)
+            StartStateDialogue(NPCState.Find);
     }
     
     void StartRun()
     {
         if (currentState == NPCState.Die) return;
+        
+        NPCState previousState = currentState;
         currentState = NPCState.Run;
         agent.isStopped = false;
         timeSinceLastPlayerContact = 0f;
         isRunningFast = true;
         runTimer = 0f;
+        
+        // Start state dialogue if state changed
+        if (showStateDialogue && previousState != currentState)
+            StartStateDialogue(NPCState.Run);
         
         // Immediately set run destination
         Vector3 runDir = (transform.position - player.position).normalized;
@@ -267,11 +298,58 @@ public class HideSeekNPC : MonoBehaviour
     
     void StartDie()
     {
+        NPCState previousState = currentState;
         currentState = NPCState.Die;
         agent.isStopped = false;
+        
+        // Start state dialogue if state changed
+        if (showStateDialogue && previousState != currentState)
+            StartStateDialogue(NPCState.Die);
+        
         Speaker speaker = GetComponent<Speaker>();
         if (speaker != null)
             speaker.enabled = false;
+    }
+    
+    void StartStateDialogue(NPCState state)
+    {
+        if (dialogueRoutine != null)
+            StopCoroutine(dialogueRoutine);
+        
+        switch (state)
+        {
+            case NPCState.Idle:
+                dialogueRoutine = StartCoroutine(StateDialogueRoutine(idleLines, state));
+                break;
+            case NPCState.Find:
+                dialogueRoutine = StartCoroutine(StateDialogueRoutine(findLines, state));
+                break;
+            case NPCState.Run:
+                dialogueRoutine = StartCoroutine(StateDialogueRoutine(runLines, state));
+                break;
+            case NPCState.Die:
+                dialogueRoutine = StartCoroutine(StateDialogueRoutine(dieLines, state));
+                break;
+        }
+    }
+    
+    IEnumerator StateDialogueRoutine(List<string> lines, NPCState expectedState)
+    {
+        if (lines == null || lines.Count == 0 || NPCDialogueUI.Instance == null)
+            yield break;
+        
+        // Continue showing random lines while in this state
+        while (currentState == expectedState && !isInDialogue)
+        {
+            // Pick a random line
+            string randomLine = lines[Random.Range(0, lines.Count)];
+            
+            // Show the dialogue
+            NPCDialogueUI.Instance.ShowDialogue(randomLine, dialogueInterval);
+            
+            // Wait for the interval before showing next line
+            yield return new WaitForSeconds(dialogueInterval);
+        }
     }
     
     void OnTriggerEnter(Collider other)
@@ -284,7 +362,20 @@ public class HideSeekNPC : MonoBehaviour
             if (!isInDialogue && !hasGivenItem && currentState == NPCState.Run && !isRunningFast)
             {
                 if (npcCollider != null && npcCollider.enabled)
+                {
+                    // Stop state dialogue when entering conversation
+                    if (dialogueRoutine != null)
+                    {
+                        StopCoroutine(dialogueRoutine);
+                        dialogueRoutine = null;
+                    }
+                    
+                    // Hide the floating dialogue panel
+                    if (NPCDialogueUI.Instance != null)
+                        NPCDialogueUI.Instance.HideDialogueImmediate();
+                    
                     StartDialogue();
+                }
             }
         }
     }
@@ -302,6 +393,17 @@ public class HideSeekNPC : MonoBehaviour
             // Only catch during slow run with collision enabled
             if (currentState == NPCState.Run && !isRunningFast && npcCollider != null && npcCollider.enabled)
             {
+                // Stop state dialogue when entering conversation
+                if (dialogueRoutine != null)
+                {
+                    StopCoroutine(dialogueRoutine);
+                    dialogueRoutine = null;
+                }
+                
+                // Hide the floating dialogue panel
+                if (NPCDialogueUI.Instance != null)
+                    NPCDialogueUI.Instance.HideDialogueImmediate();
+                
                 StartDialogue();
             }
         }
@@ -325,8 +427,17 @@ public class HideSeekNPC : MonoBehaviour
     
     IEnumerator WaitForDialogue()
     {
+        // Wait for the main dialogue to finish
         yield return new WaitWhile(() => DialogueManager.Instance.IsDialogueActive());
+        
+        // Give the reward after dialogue
         GiveReward();
+        
+        // Restart the state dialogue routine now that main dialogue is over
+        if (showStateDialogue && currentState != NPCState.Die)
+        {
+            StartStateDialogue(currentState);
+        }
     }
     
     void GiveReward()
