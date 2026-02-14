@@ -4,10 +4,10 @@ using System.Collections;
 
 public enum NPCState
 {
-    Hiding,
-    Running,
-    Taunting,
-    Disappearing
+    Idle,
+    Find,
+    Run,
+    Die
 }
 
 public class HideSeekNPC : MonoBehaviour
@@ -18,168 +18,296 @@ public class HideSeekNPC : MonoBehaviour
     [SerializeField] private ItemObject questItem;
     [SerializeField] private GameObject droppedItemPrefab;
     [SerializeField] private GameObject rewardIcon;
+    [SerializeField] private Collider npcCollider;
     
-    [Header("=== STATE SETTINGS ===")]
-    public NPCState currentState = NPCState.Hiding;
+    [Header("=== BEHAVIOR ===")]
+    public NPCState currentState = NPCState.Idle;
     
-    [Header("--- Hide State Settings ---")]
-    [SerializeField] private float hideSpeed = 2f;
-    [SerializeField] private float wanderRange = 10f;
-    [SerializeField] private float wobbleStrength = 0.5f;
+    [Header("Speeds")]
+    [SerializeField] private float wanderSpeed = 6f;
+    [SerializeField] private float approachSpeed = 10f;
+    [SerializeField] private float runSpeed = 8f;
+    [SerializeField] private float dieSpeed = 13f;
     
-    [Header("--- Run State Settings ---")]
-    [SerializeField] private float sprintSpeed = 7f;
-    [SerializeField] private float jogSpeed = 4f;
-    [SerializeField] private float sprintDuration = 2.5f;
-    [SerializeField] private float runAwayDistance = 15f;
+    [Header("Distances")]
+    [SerializeField] private float detectionRange = 8f;
+    [SerializeField] private float runTriggerDistance = 5f;
+    [SerializeField] private float safeDistance = 30f;
+    [SerializeField] private float wanderRadius = 18f;
     
-    [Header("--- Taunt State Settings ---")]
-    [SerializeField] private float tauntSpeed = 5f;
-    [SerializeField] private float tauntWobbleStrength = 0.8f;
-    [SerializeField] private float tauntStopDistance = 3f;
+    [Header("Timing")]
+    [SerializeField] private float findDelay = 3f;
+    [SerializeField] private float runFastDuration = 4f;
     
-    [Header("--- Disappear State Settings ---")]
-    [SerializeField] private float disappearSpeed = 12f;
-    [SerializeField] private float disappearDistance = 30f;
-    [SerializeField] private bool disableGameObject = true;
+    [Header("Effects")]
+    [SerializeField] private float wobbleAmount = 1f;
     
-    [Header("--- Detection Settings ---")]
-    [SerializeField] private float detectionRange = 10f;
-    [SerializeField] private float safeDistance = 15f;
-    [SerializeField] private float tauntingDelay = 30f;
-    
-    [Header("--- Quest Settings ---")]
-    [SerializeField] private float itemSpawnOffsetZ = -2f;
-    
-    private float timeSinceLastFound;
+    private float timeSinceLastPlayerContact;
     private bool hasGivenItem = false;
     private bool isInDialogue = false;
     private Transform player;
-    
-    // State scripts
-    private HideState hideState;
-    private RunState runState;
-    private TauntState tauntState;
-    private DisappearState disappearState;
+    private float wobblePhase;
+    private bool isRunningFast = true;
+    private float runTimer;
     
     void Start()
     {
         if (agent == null) agent = GetComponent<NavMeshAgent>();
         player = GameObject.FindGameObjectWithTag("Player").transform;
+        wobblePhase = Random.Range(0f, Mathf.PI * 2);
         
-        // Add state components
-        hideState = gameObject.AddComponent<HideState>();
-        runState = gameObject.AddComponent<RunState>();
-        tauntState = gameObject.AddComponent<TauntState>();
-        disappearState = gameObject.AddComponent<DisappearState>();
+        agent.stoppingDistance = 0.5f;
         
-        // Initialize states with references
-        hideState.Initialize(this, agent, player, hideSpeed, wanderRange, wobbleStrength);
-        runState.Initialize(this, agent, player, sprintSpeed, jogSpeed, sprintDuration, runAwayDistance);
-        tauntState.Initialize(this, agent, player, tauntSpeed, tauntWobbleStrength, tauntStopDistance);
-        disappearState.Initialize(this, agent, player, disappearSpeed, disappearDistance, disableGameObject);
+        if (npcCollider == null)
+            npcCollider = GetComponent<Collider>();
         
         if (rewardIcon != null)
             rewardIcon.SetActive(true);
             
-        StartHiding();
+        StartIdle();
     }
     
     void Update()
     {
         if (isInDialogue) return;
         
-        timeSinceLastFound += Time.deltaTime;
+        timeSinceLastPlayerContact += Time.deltaTime;
+        wobblePhase += Time.deltaTime * 2f;
+        
+        float distToPlayer = Vector3.Distance(transform.position, player.position);
+        
+        // CRITICAL: Always check for run trigger regardless of state
+        if (distToPlayer < runTriggerDistance && currentState != NPCState.Die && currentState != NPCState.Run)
+        {
+            StartRun();
+            return;
+        }
         
         switch (currentState)
         {
-            case NPCState.Hiding:
-                hideState.UpdateState();
-                CheckTransitionsFromHide();
+            case NPCState.Idle:
+                UpdateIdle();
+                
+                if (distToPlayer < detectionRange)
+                {
+                    StartRun();
+                }
+                else if (timeSinceLastPlayerContact > findDelay)
+                {
+                    StartFind();
+                }
                 break;
-            case NPCState.Running:
-                runState.UpdateState();
-                CheckTransitionsFromRun();
+                
+            case NPCState.Find:
+                UpdateFind();
                 break;
-            case NPCState.Taunting:
-                tauntState.UpdateState();
-                CheckTransitionsFromTaunt();
+                
+            case NPCState.Run:
+                UpdateRun();
+                
+                if (distToPlayer > safeDistance)
+                {
+                    StartIdle();
+                }
                 break;
-            case NPCState.Disappearing:
-                disappearState.UpdateState();
+                
+            case NPCState.Die:
+                UpdateDie();
                 break;
         }
     }
     
-    void CheckTransitionsFromHide()
+    void UpdateIdle()
     {
-        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
+        agent.speed = wanderSpeed;
         
-        if (distanceToPlayer < detectionRange)
-        {
-            StartRunning();
-        }
-        else if (timeSinceLastFound > tauntingDelay)
-        {
-            StartTaunting();
-        }
-    }
-    
-    void CheckTransitionsFromRun()
-    {
-        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
+        // Enable collision in Idle
+        if (npcCollider != null && !npcCollider.enabled)
+            npcCollider.enabled = true;
         
-        if (distanceToPlayer > safeDistance)
-        {
-            StartHiding();
-        }
-    }
-    
-    void CheckTransitionsFromTaunt()
-    {
-        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
+        // Wobble in Idle
+        Vector3 wobble = new Vector3(
+            Mathf.Sin(wobblePhase) * wobbleAmount * Time.deltaTime,
+            0,
+            Mathf.Cos(wobblePhase * 0.7f) * wobbleAmount * Time.deltaTime
+        );
+        transform.position += wobble;
         
-        if (distanceToPlayer < detectionRange / 2)
+        if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance + 0.5f)
         {
-            StartRunning();
+            Vector3 randomPoint = transform.position + Random.insideUnitSphere * wanderRadius;
+            randomPoint.y = transform.position.y;
+            
+            if (NavMesh.SamplePosition(randomPoint, out NavMeshHit hit, wanderRadius, NavMesh.AllAreas))
+                agent.SetDestination(hit.position);
         }
     }
     
-    public void StartHiding()
+    void UpdateFind()
     {
-        currentState = NPCState.Hiding;
-        timeSinceLastFound = 0f;
-        hideState.EnterState();
+        // DISABLE collision in Find state
+        if (npcCollider != null && npcCollider.enabled)
+            npcCollider.enabled = false;
+        
+        float distToPlayer = Vector3.Distance(transform.position, player.position);
+        
+        // If we're already too close, run immediately
+        if (distToPlayer < runTriggerDistance)
+        {
+            StartRun();
+            return;
+        }
+        
+        // Move to exactly runTriggerDistance away from player
+        Vector3 directionToPlayer = (player.position - transform.position).normalized;
+        Vector3 targetPosition = player.position - (directionToPlayer * runTriggerDistance);
+        
+        agent.speed = approachSpeed;
+        agent.SetDestination(targetPosition);
     }
     
-    public void StartRunning()
+    void UpdateRun()
     {
-        currentState = NPCState.Running;
-        timeSinceLastFound = 0f;
-        runState.EnterState();
+        if (isRunningFast)
+        {
+            runTimer += Time.deltaTime;
+            agent.speed = runSpeed;
+            
+            // DISABLE collision during fast run
+            if (npcCollider != null && npcCollider.enabled)
+                npcCollider.enabled = false;
+            
+            if (runTimer > runFastDuration)
+                isRunningFast = false;
+        }
+        else
+        {
+            agent.speed = runSpeed * 0.6f;
+            
+            // ENABLE collision when slows down (catchable)
+            if (npcCollider != null && !npcCollider.enabled)
+                npcCollider.enabled = true;
+        }
+        
+        Vector3 runDir = (transform.position - player.position).normalized;
+        if (runDir == Vector3.zero) runDir = transform.forward;
+        
+        Vector3 runPoint = transform.position + runDir * 20f;
+        
+        if (NavMesh.SamplePosition(runPoint, out NavMeshHit hit, 20f, NavMesh.AllAreas))
+        {
+            agent.SetDestination(hit.position);
+        }
     }
     
-    public void StartTaunting()
+    void UpdateDie()
     {
-        currentState = NPCState.Taunting;
-        tauntState.EnterState();
+        agent.speed = dieSpeed;
+        
+        // Enable collision in Die
+        if (npcCollider != null && !npcCollider.enabled)
+            npcCollider.enabled = true;
+        
+        // Slight wobble in Die
+        Vector3 wobble = new Vector3(
+            Mathf.Sin(wobblePhase * 3f) * wobbleAmount * 0.5f * Time.deltaTime,
+            0,
+            Mathf.Cos(wobblePhase * 2f) * wobbleAmount * 0.5f * Time.deltaTime
+        );
+        transform.position += wobble;
+        
+        if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance + 0.5f)
+        {
+            Vector3 escapeDir = Random.insideUnitSphere.normalized;
+            escapeDir.y = 0;
+            Vector3 escapePoint = transform.position + escapeDir * 40f;
+            
+            if (NavMesh.SamplePosition(escapePoint, out NavMeshHit hit, 40f, NavMesh.AllAreas))
+                agent.SetDestination(hit.position);
+        }
+        
+        if (Vector3.Distance(transform.position, player.position) > 50f)
+            gameObject.SetActive(false);
     }
     
-    public void StartDisappearing()
+    void StartIdle()
     {
-        currentState = NPCState.Disappearing;
-        disappearState.EnterState();
+        if (currentState == NPCState.Die) return;
+        currentState = NPCState.Idle;
+        agent.isStopped = false;
+        timeSinceLastPlayerContact = 0f;
+    }
+    
+    void StartFind()
+    {
+        if (currentState == NPCState.Die) return;
+        currentState = NPCState.Find;
+        agent.isStopped = false;
+        timeSinceLastPlayerContact = 0f;
+    }
+    
+    void StartRun()
+    {
+        if (currentState == NPCState.Die) return;
+        currentState = NPCState.Run;
+        agent.isStopped = false;
+        timeSinceLastPlayerContact = 0f;
+        isRunningFast = true;
+        runTimer = 0f;
+        
+        // Immediately set run destination
+        Vector3 runDir = (transform.position - player.position).normalized;
+        if (runDir == Vector3.zero) runDir = transform.forward;
+        
+        Vector3 runPoint = transform.position + runDir * 20f;
+        
+        if (NavMesh.SamplePosition(runPoint, out NavMeshHit hit, 20f, NavMesh.AllAreas))
+            agent.SetDestination(hit.position);
+    }
+    
+    void StartDie()
+    {
+        currentState = NPCState.Die;
+        agent.isStopped = false;
+        Speaker speaker = GetComponent<Speaker>();
+        if (speaker != null)
+            speaker.enabled = false;
     }
     
     void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player") && !isInDialogue && !hasGivenItem)
+        if (other.CompareTag("Player"))
         {
-            StartDialogueWithPlayer();
+            timeSinceLastPlayerContact = 0f;
+            
+            // Only catch if during slow run with collision enabled
+            if (!isInDialogue && !hasGivenItem && currentState == NPCState.Run && !isRunningFast)
+            {
+                if (npcCollider != null && npcCollider.enabled)
+                    StartDialogue();
+            }
         }
     }
     
-    void StartDialogueWithPlayer()
+    void OnTriggerStay(Collider other)
+    {
+        if (other.CompareTag("Player"))
+            timeSinceLastPlayerContact = 0f;
+    }
+    
+    void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Player") && !isInDialogue && !hasGivenItem)
+        {
+            // Only catch during slow run with collision enabled
+            if (currentState == NPCState.Run && !isRunningFast && npcCollider != null && npcCollider.enabled)
+            {
+                StartDialogue();
+            }
+        }
+    }
+    
+    void StartDialogue()
     {
         isInDialogue = true;
         agent.isStopped = true;
@@ -187,28 +315,21 @@ public class HideSeekNPC : MonoBehaviour
         if (dialogueAsset != null && DialogueManager.Instance != null)
         {
             DialogueManager.Instance.StartDialogue("Хранитель артефакта", dialogueAsset.RootNode);
-            StartCoroutine(WaitForDialogueEnd());
+            StartCoroutine(WaitForDialogue());
         }
         else
         {
-            GiveQuestItem();
-            Invoke(nameof(EndDialogue), 1f);
+            GiveReward();
         }
     }
     
-    IEnumerator WaitForDialogueEnd()
+    IEnumerator WaitForDialogue()
     {
         yield return new WaitWhile(() => DialogueManager.Instance.IsDialogueActive());
-        
-        if (!hasGivenItem)
-        {
-            GiveQuestItem();
-        }
-        
-        EndDialogue();
+        GiveReward();
     }
     
-    void GiveQuestItem()
+    void GiveReward()
     {
         if (hasGivenItem) return;
         
@@ -219,35 +340,16 @@ public class HideSeekNPC : MonoBehaviour
         
         if (droppedItemPrefab != null && questItem != null)
         {
-            Vector3 spawnPosition = player.position + new Vector3(0, 0, itemSpawnOffsetZ);
-                
-            var droppedItem = Instantiate(droppedItemPrefab, spawnPosition, Quaternion.identity)
-                .GetComponent<DroppedItem>();
-                
-            if (droppedItem != null)
-            {
-                droppedItem.Initialize(questItem);
-            }
+            Vector3 spawnPos = player.position + new Vector3(0, 0, -2f);
+            var dropped = Instantiate(droppedItemPrefab, spawnPos, Quaternion.identity).GetComponent<DroppedItem>();
+            if (dropped != null)
+                dropped.Initialize(questItem);
             
             if (AudioManager.instance != null)
                 AudioManager.instance.Play("Drop");
         }
-    }
-    
-    void EndDialogue()
-    {
-        isInDialogue = false;
         
-        if (hasGivenItem)
-        {
-            StartDisappearing();
-        }
-        else
-        {
-            StartRunning();
-        }
+        isInDialogue = false;
+        StartDie();
     }
-    
-    public bool HasGivenItem() => hasGivenItem;
-    public Transform GetPlayer() => player;
 }

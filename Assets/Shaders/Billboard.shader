@@ -1,8 +1,9 @@
-Shader "Unlit/Billboard"
+Shader "Unlit/BillboardWithFlip"
 {
     Properties
     {
         _MainTex ("Texture", 2D) = "white" {}
+        [Toggle(FLIP_X)] _FlipX("Flip X Axis", Float) = 0
     }
     SubShader
     {
@@ -18,6 +19,7 @@ Shader "Unlit/Billboard"
             #pragma vertex vert
             #pragma fragment frag
             #pragma multi_compile_fog
+            #pragma shader_feature FLIP_X
 
             #include "UnityCG.cginc"
 
@@ -47,10 +49,8 @@ Shader "Unlit/Billboard"
                 // Get camera basis vectors (right, up, forward) in world space
                 float3 camRight = UNITY_MATRIX_V[0].xyz;  // Camera right
                 float3 camUp = UNITY_MATRIX_V[1].xyz;     // Camera up
-                float3 camForward = UNITY_MATRIX_V[2].xyz; // Camera forward
                 
                 // Extract scale from object's world matrix
-                // The scale is in the length of the basis vectors
                 float3 objectScale = float3(
                     length(unity_ObjectToWorld._m00_m10_m20),
                     length(unity_ObjectToWorld._m01_m11_m21),
@@ -58,11 +58,28 @@ Shader "Unlit/Billboard"
                 );
                 
                 // Apply the object's scale to the vertex position
-                // v.vertex.xy contains the quad's local coordinates (-0.5 to 0.5 for a unit quad)
                 float3 scaledVertex = float3(v.vertex.x * objectScale.x, v.vertex.y * objectScale.y, 0);
                 
+                // Check if we need to flip based on local scale X
+                // If localScale.x is negative, flip the X direction
+                float flipFactor = 1.0;
+                
+                // Get the sign of the local scale from the object's transform
+                // This is a bit hacky but works: check if the first column of world matrix is negative
+                float3 worldRight = normalize(unity_ObjectToWorld._m00_m10_m20);
+                float3 originalRight = float3(1, 0, 0);
+                float dotProduct = dot(worldRight, originalRight);
+                
+                // If the world right direction is opposite to original right, flip
+                if (dotProduct < -0.5)
+                {
+                    flipFactor = -1.0;
+                }
+                
+                // Apply flip to X direction
+                scaledVertex.x *= flipFactor;
+                
                 // Rotate the scaled vertex to face the camera
-                // Use camera right/up vectors to build the billboard
                 float3 worldVertex = worldPos;
                 worldVertex += scaledVertex.x * camRight;
                 worldVertex += scaledVertex.y * camUp;
@@ -70,6 +87,11 @@ Shader "Unlit/Billboard"
                 // Transform to clip space
                 o.vertex = mul(UNITY_MATRIX_VP, float4(worldVertex, 1.0));
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
+                
+                // Flip UVs if needed (optional - uncomment if textures appear mirrored)
+                // if (flipFactor < 0)
+                //     o.uv.x = 1.0 - o.uv.x;
+                
                 UNITY_TRANSFER_FOG(o, o.vertex);
                 return o;
             }

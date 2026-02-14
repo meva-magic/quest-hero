@@ -13,6 +13,10 @@ public class ItemUI : MonoBehaviour
     [SerializeField]
     TextMeshProUGUI itemNameText;
     
+    [Header("Appearance Settings")]
+    [SerializeField]
+    Color defaultTint = Color.white;
+    
     private string inventoryId;
     private ItemObject item;
     private Action<string> removeItemAction;
@@ -24,6 +28,8 @@ public class ItemUI : MonoBehaviour
         this.removeItemAction = removeItemAction;
         
         image.sprite = item.icon;
+        image.color = defaultTint; // Apply the tint from inspector
+        
         transform.localScale = Vector3.one;
         
         if (itemNameText != null)
@@ -39,4 +45,9 @@ public class ItemUI : MonoBehaviour
     
     public string GetInventoryId() => inventoryId;
     public ItemObject GetItem() => item;
+    
+    public void SetTint(Color newTint)
+    {
+        image.color = newTint;
+    }
 }

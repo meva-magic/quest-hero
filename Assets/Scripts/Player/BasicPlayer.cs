@@ -11,6 +11,10 @@ public class BasicPlayer : MonoBehaviour
     Vector3 moveInput;
     bool canMove = true;
     
+    [Header("Footsteps")]
+    [SerializeField] string footstepSoundName = "Footsteps";
+    bool isMoving = false;
+    
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
@@ -29,6 +33,24 @@ public class BasicPlayer : MonoBehaviour
             if (canMove)
                 DisableMovement();
             return;
+        }
+        
+        // Check if player is moving
+        bool wasMoving = isMoving;
+        isMoving = moveInput.magnitude > 0.1f && canMove;
+        
+        // Handle footsteps sound
+        if (isMoving && !wasMoving)
+        {
+            // Started moving - play looping sound
+            if (AudioManager.instance != null)
+                AudioManager.instance.Play(footstepSoundName);
+        }
+        else if (!isMoving && wasMoving)
+        {
+            // Stopped moving - stop sound
+            if (AudioManager.instance != null)
+                AudioManager.instance.Stop(footstepSoundName);
         }
     }
     
@@ -70,6 +92,10 @@ public class BasicPlayer : MonoBehaviour
         canMove = false;
         moveInput = Vector3.zero;
         rb.velocity = Vector3.zero;
+        
+        // Stop footsteps when movement disabled
+        if (AudioManager.instance != null)
+            AudioManager.instance.Stop(footstepSoundName);
     }
     
     private void EnableMovement()
@@ -87,6 +113,10 @@ public class BasicPlayer : MonoBehaviour
         {
             moveInput = Vector3.zero;
             rb.velocity = Vector3.zero;
+            
+            // Stop footsteps when movement disabled
+            if (AudioManager.instance != null)
+                AudioManager.instance.Stop(footstepSoundName);
         }
     }
 }

@@ -290,20 +290,6 @@
         {
             "m_OutputSlot": {
                 "m_Node": {
-                    "m_Id": "249a71c268a9433bb72d40206ff35791"
-                },
-                "m_SlotId": 0
-            },
-            "m_InputSlot": {
-                "m_Node": {
-                    "m_Id": "8c692e4dccb447cca14e2d3f3607fa66"
-                },
-                "m_SlotId": 0
-            }
-        },
-        {
-            "m_OutputSlot": {
-                "m_Node": {
                     "m_Id": "3c321bc00f504df7990cef70381e089d"
                 },
                 "m_SlotId": 2
@@ -327,20 +313,6 @@
                     "m_Id": "ada34e7555c34e83841c09e6346603f1"
                 },
                 "m_SlotId": 1
-            }
-        },
-        {
-            "m_OutputSlot": {
-                "m_Node": {
-                    "m_Id": "43c3fb24c7aa409092bdbfc65c9bdc06"
-                },
-                "m_SlotId": 0
-            },
-            "m_InputSlot": {
-                "m_Node": {
-                    "m_Id": "691107847f2142f38eb9d7615c5bcc41"
-                },
-                "m_SlotId": 0
             }
         },
         {
@@ -2183,9 +2155,9 @@
     "m_ShaderOutputName": "ColorA",
     "m_StageCapability": 3,
     "m_Value": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0
+        "x": 0.11372549086809159,
+        "y": 0.13333334028720857,
+        "z": 0.1568627506494522
     },
     "m_DefaultValue": {
         "x": 0.0,
@@ -2822,9 +2794,9 @@
     "m_ShaderOutputName": "ColorB",
     "m_StageCapability": 3,
     "m_Value": {
-        "x": 1.0,
-        "y": 1.0,
-        "z": 1.0
+        "x": 0.8509804010391235,
+        "y": 0.7921568751335144,
+        "z": 0.8352941274642944
     },
     "m_DefaultValue": {
         "x": 0.0,
@@ -3881,10 +3853,10 @@
     "hlslDeclarationOverride": 0,
     "m_Hidden": false,
     "m_Value": {
-        "r": 1.0,
-        "g": 1.0,
-        "b": 1.0,
-        "a": 0.0
+        "r": 0.8509804010391235,
+        "g": 0.7921568751335144,
+        "b": 0.8352941274642944,
+        "a": 1.0
     },
     "isMainColor": false,
     "m_ColorMode": 1

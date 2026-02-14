@@ -7,34 +7,56 @@ public class RunState : MonoBehaviour
     private NavMeshAgent agent;
     private Transform player;
     
-    // Settings passed from main script
-    private float sprintSpeed;
-    private float jogSpeed;
-    private float sprintDuration;
+    private float runFastSpeed;
+    private float runSlowSpeed;
+    private float runFastDuration;
     private float runAwayDistance;
     
-    private float sprintTimer;
-    private bool isSprinting = true;
+    private float runFastTimer;
+    private bool isRunningFast = true;
     
     public void Initialize(HideSeekNPC controller, NavMeshAgent agent, Transform player,
-        float sprintSpeed, float jogSpeed, float sprintDuration, float runAwayDistance)
+        float runFastSpeed, float runSlowSpeed, float runFastDuration, float runAwayDistance)
     {
         this.controller = controller;
         this.agent = agent;
         this.player = player;
-        this.sprintSpeed = sprintSpeed;
-        this.jogSpeed = jogSpeed;
-        this.sprintDuration = sprintDuration;
+        this.runFastSpeed = runFastSpeed;
+        this.runSlowSpeed = runSlowSpeed;
+        this.runFastDuration = runFastDuration;
         this.runAwayDistance = runAwayDistance;
     }
     
     public void EnterState()
     {
         agent.isStopped = false;
-        isSprinting = true;
-        sprintTimer = sprintDuration;
-        agent.speed = sprintSpeed;
+        isRunningFast = true;
+        runFastTimer = runFastDuration;
+        agent.speed = runFastSpeed;
         
+        PickRunDestination();
+    }
+    
+    public void UpdateState()
+    {
+        if (isRunningFast)
+        {
+            runFastTimer -= Time.deltaTime;
+            if (runFastTimer <= 0)
+            {
+                isRunningFast = false;
+                agent.speed = runSlowSpeed;
+            }
+        }
+        
+        if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
+        {
+            PickRunDestination();
+        }
+    }
+    
+    void PickRunDestination()
+    {
         Vector3 runDirection = (transform.position - player.position).normalized;
         Vector3 runPoint = transform.position + runDirection * runAwayDistance;
         
@@ -44,29 +66,5 @@ public class RunState : MonoBehaviour
         }
     }
     
-    public void UpdateState()
-    {
-        if (isSprinting)
-        {
-            sprintTimer -= Time.deltaTime;
-            if (sprintTimer <= 0)
-            {
-                isSprinting = false;
-                agent.speed = jogSpeed;
-            }
-        }
-        
-        if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
-        {
-            Vector3 runDirection = (transform.position - player.position).normalized;
-            Vector3 runPoint = transform.position + runDirection * runAwayDistance;
-            
-            if (NavMesh.SamplePosition(runPoint, out NavMeshHit hit, runAwayDistance, NavMesh.AllAreas))
-            {
-                agent.SetDestination(hit.position);
-            }
-        }
-    }
-    
-    public bool IsSprinting() => isSprinting;
+    public bool IsRunningFast() => isRunningFast;
 }
