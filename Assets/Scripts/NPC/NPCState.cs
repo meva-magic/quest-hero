@@ -8,7 +8,8 @@ public enum NPCState
     Idle,
     Find,
     Run,
-    Die
+    Die,
+    Base
 }
 
 public class HideSeekNPC : MonoBehaviour
@@ -21,8 +22,13 @@ public class HideSeekNPC : MonoBehaviour
     [SerializeField] private GameObject rewardIcon;
     [SerializeField] private Collider npcCollider;
     
+    [Header("=== БАЗА ===")]
+    [SerializeField] private Transform basePoint;
+    [SerializeField] private float baseReturnDistance = 30f;
+    [SerializeField] private float playerDistanceCheck = 20f;
+    
     [Header("=== BEHAVIOR ===")]
-    public NPCState currentState = NPCState.Idle;
+    public NPCState currentState = NPCState.Base;
     
     [Header("State Dialogue Lines")]
     [SerializeField] private List<string> idleLines = new List<string>();
@@ -31,7 +37,7 @@ public class HideSeekNPC : MonoBehaviour
     [SerializeField] private List<string> dieLines = new List<string>();
     
     [Header("Dialogue Settings")]
-    [SerializeField] private float dialogueInterval = 3f; // Shows random line every X seconds
+    [SerializeField] private float dialogueInterval = 3f;
     [SerializeField] private bool showStateDialogue = true;
     
     [Header("Speeds")]
@@ -76,8 +82,16 @@ public class HideSeekNPC : MonoBehaviour
         
         if (rewardIcon != null)
             rewardIcon.SetActive(true);
-            
-        StartIdle();
+        
+        // Если база не задана, используем текущую позицию
+        if (basePoint == null)
+        {
+            GameObject baseObj = new GameObject(name + "_BasePoint");
+            baseObj.transform.position = transform.position;
+            basePoint = baseObj.transform;
+        }
+        
+        StartBase();
     }
     
     void Update()
@@ -88,9 +102,24 @@ public class HideSeekNPC : MonoBehaviour
         wobblePhase += Time.deltaTime * 2f;
         
         float distToPlayer = Vector3.Distance(transform.position, player.position);
+        float distToBase = Vector3.Distance(transform.position, basePoint.position);
+        
+        // ИЗМЕНЕНИЕ: Проверка расстояния до базы ИЛИ до игрока
+        bool tooFarFromBase = distToBase > baseReturnDistance;
+        bool tooFarFromPlayer = distToPlayer > playerDistanceCheck;
+        
+        // Если слишком далеко от базы ИЛИ от игрока - возвращаемся
+        if ((tooFarFromBase || tooFarFromPlayer) && 
+            currentState != NPCState.Die && 
+            currentState != NPCState.Base)
+        {
+            Debug.Log($"Too far - Base: {distToBase:F1}/{baseReturnDistance}, Player: {distToPlayer:F1}/{playerDistanceCheck} - returning");
+            StartReturnToBase();
+            return;
+        }
         
         // CRITICAL: Always check for run trigger regardless of state
-        if (distToPlayer < runTriggerDistance && currentState != NPCState.Die && currentState != NPCState.Run)
+        if (distToPlayer < runTriggerDistance && currentState != NPCState.Die && currentState != NPCState.Run && currentState != NPCState.Base)
         {
             StartRun();
             return;
@@ -98,6 +127,15 @@ public class HideSeekNPC : MonoBehaviour
         
         switch (currentState)
         {
+            case NPCState.Base:
+                UpdateBase();
+                // Если игрок достаточно близко и NPC не слишком далеко от базы, переходим в Idle
+                if (distToPlayer < detectionRange * 2 && distToBase < baseReturnDistance * 0.7f)
+                {
+                    StartIdle();
+                }
+                break;
+                
             case NPCState.Idle:
                 UpdateIdle();
                 
@@ -130,9 +168,65 @@ public class HideSeekNPC : MonoBehaviour
         }
     }
     
+    // НОВЫЙ МЕТОД: Возвращение на базу
+    void StartReturnToBase()
+    {
+        if (currentState == NPCState.Die || currentState == NPCState.Base) return;
+        
+        Debug.Log("Returning to base");
+        currentState = NPCState.Base;
+        agent.isStopped = false;
+        agent.SetDestination(basePoint.position);
+        
+        // Останавливаем диалоговые реплики
+        if (dialogueRoutine != null)
+        {
+            StopCoroutine(dialogueRoutine);
+            dialogueRoutine = null;
+        }
+    }
+    
+    // НОВЫЙ МЕТОД: Обновление состояния базы
+    void UpdateBase()
+    {
+        // Стоим на месте или идем к базовой точке
+        float distToBase = Vector3.Distance(transform.position, basePoint.position);
+        
+        if (distToBase > 1f)
+        {
+            // Идем к базе
+            agent.speed = wanderSpeed;
+            agent.SetDestination(basePoint.position);
+        }
+        else
+        {
+            // Дошли до базы - стоим
+            agent.isStopped = true;
+            
+            // Можно добавить легкое покачивание
+            Vector3 wobble = new Vector3(
+                Mathf.Sin(wobblePhase) * 0.2f * Time.deltaTime,
+                0,
+                Mathf.Cos(wobblePhase * 0.7f) * 0.2f * Time.deltaTime
+            );
+            transform.position += wobble;
+            
+            // Смотрим на игрока, если он рядом
+            float distToPlayer = Vector3.Distance(transform.position, player.position);
+            if (distToPlayer < detectionRange * 2)
+            {
+                Vector3 lookDir = (player.position - transform.position).normalized;
+                lookDir.y = 0;
+                if (lookDir != Vector3.zero)
+                    transform.rotation = Quaternion.LookRotation(lookDir);
+            }
+        }
+    }
+    
     void UpdateIdle()
     {
         agent.speed = wanderSpeed;
+        agent.isStopped = false;
         
         // Enable collision in Idle
         if (npcCollider != null && !npcCollider.enabled)
@@ -243,6 +337,13 @@ public class HideSeekNPC : MonoBehaviour
             gameObject.SetActive(false);
     }
     
+    void StartBase()
+    {
+        currentState = NPCState.Base;
+        agent.isStopped = true;
+        timeSinceLastPlayerContact = 0f;
+    }
+    
     void StartIdle()
     {
         if (currentState == NPCState.Die) return;
@@ -338,16 +439,10 @@ public class HideSeekNPC : MonoBehaviour
         if (lines == null || lines.Count == 0 || NPCDialogueUI.Instance == null)
             yield break;
         
-        // Continue showing random lines while in this state
         while (currentState == expectedState && !isInDialogue)
         {
-            // Pick a random line
             string randomLine = lines[Random.Range(0, lines.Count)];
-            
-            // Show the dialogue
             NPCDialogueUI.Instance.ShowDialogue(randomLine, dialogueInterval);
-            
-            // Wait for the interval before showing next line
             yield return new WaitForSeconds(dialogueInterval);
         }
     }
@@ -363,14 +458,12 @@ public class HideSeekNPC : MonoBehaviour
             {
                 if (npcCollider != null && npcCollider.enabled)
                 {
-                    // Stop state dialogue when entering conversation
                     if (dialogueRoutine != null)
                     {
                         StopCoroutine(dialogueRoutine);
                         dialogueRoutine = null;
                     }
                     
-                    // Hide the floating dialogue panel
                     if (NPCDialogueUI.Instance != null)
                         NPCDialogueUI.Instance.HideDialogueImmediate();
                     
@@ -390,17 +483,14 @@ public class HideSeekNPC : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Player") && !isInDialogue && !hasGivenItem)
         {
-            // Only catch during slow run with collision enabled
             if (currentState == NPCState.Run && !isRunningFast && npcCollider != null && npcCollider.enabled)
             {
-                // Stop state dialogue when entering conversation
                 if (dialogueRoutine != null)
                 {
                     StopCoroutine(dialogueRoutine);
                     dialogueRoutine = null;
                 }
                 
-                // Hide the floating dialogue panel
                 if (NPCDialogueUI.Instance != null)
                     NPCDialogueUI.Instance.HideDialogueImmediate();
                 
@@ -427,17 +517,8 @@ public class HideSeekNPC : MonoBehaviour
     
     IEnumerator WaitForDialogue()
     {
-        // Wait for the main dialogue to finish
         yield return new WaitWhile(() => DialogueManager.Instance.IsDialogueActive());
-        
-        // Give the reward after dialogue
         GiveReward();
-        
-        // Restart the state dialogue routine now that main dialogue is over
-        if (showStateDialogue && currentState != NPCState.Die)
-        {
-            StartStateDialogue(currentState);
-        }
     }
     
     void GiveReward()
@@ -462,5 +543,21 @@ public class HideSeekNPC : MonoBehaviour
         
         isInDialogue = false;
         StartDie();
+    }
+
+    // НОВЫЙ МЕТОД: Для получения условий от NPCBaseZone
+    public void SetBaseReturnConditions(float distToBase, float distToPlayer, float baseReturnDist, float playerCheckDist)
+    {
+        // Используем переданные значения для проверки возврата
+        bool tooFarFromBase = distToBase > baseReturnDist;
+        bool tooFarFromPlayer = distToPlayer > playerCheckDist;
+        
+        // Если слишком далеко от базы ИЛИ от игрока - возвращаемся
+        if ((tooFarFromBase || tooFarFromPlayer) && 
+            currentState != NPCState.Die && 
+            currentState != NPCState.Base)
+        {
+            StartReturnToBase();
+        }
     }
 }
