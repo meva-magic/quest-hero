@@ -6,23 +6,25 @@ public class Speaker : MonoBehaviour
     private GameObject player;
     public string Name;
     public Dialogue Dialogue;
-    private bool inRange;
+    private bool isPlayerInRange = false; // Флаг, что игрок В ЗОНЕ ЭТОГО NPC
     private bool isDialogueActive = false;
     private DialogueNode repeatingNode = null;
     
     [Header("Indicator")]
-    [SerializeField] private GameObject dialogueIndicator; // Просто объект для активации (значок над головой)
+    [SerializeField] private GameObject dialogueIndicator;
     [SerializeField] private KeyCode dialogueKey = KeyCode.Space;
 
     private void Start()
     {
         player = GameObject.FindGameObjectWithTag("Player");
-        inRange = false;
+        isPlayerInRange = false;
         
         if (dialogueIndicator != null)
             dialogueIndicator.SetActive(false);
             
         FindRepeatingNode();
+        
+        Debug.Log($"Speaker {Name} started");
     }
     
     private void FindRepeatingNode()
@@ -50,8 +52,10 @@ public class Speaker : MonoBehaviour
  
     private void Update()
     {
-        if (inRange && Input.GetKeyDown(dialogueKey) && !isDialogueActive && !DialogueManager.Instance.IsDialogueActive())
+        // ГОВОРИТЬ МОЖЕТ ТОЛЬКО ТОТ, У КОГО PLAYER В ЗОНЕ
+        if (isPlayerInRange && Input.GetKeyDown(dialogueKey) && !isDialogueActive && !DialogueManager.Instance.IsDialogueActive())
         {
+            Debug.Log($"Player speaking with {Name}");
             SpeakTo();
         }
     }
@@ -62,9 +66,10 @@ public class Speaker : MonoBehaviour
         
         isDialogueActive = true;
         
-        // Скрываем индикатор когда начинаем диалог
         if (dialogueIndicator != null)
             dialogueIndicator.SetActive(false);
+        
+        Debug.Log($"Speaker {Name} SpeakTo called");
         
         if (repeatingNode != null)
         {
@@ -148,9 +153,9 @@ public class Speaker : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            inRange = true;
+            isPlayerInRange = true; // ТОЛЬКО ЭТОТ NPC ЗНАЕТ, ЧТО ИГРОК В ЕГО ЗОНЕ
+            Debug.Log($"Player entered {Name} zone");
             
-            // Включаем индикатор при входе игрока в зону
             if (dialogueIndicator != null && !isDialogueActive)
                 dialogueIndicator.SetActive(true);
         }
@@ -160,9 +165,9 @@ public class Speaker : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            inRange = false;
+            isPlayerInRange = false; // ИГРОК ВЫШЕЛ ИЗ ЗОНЫ ЭТОГО NPC
+            Debug.Log($"Player exited {Name} zone");
             
-            // Выключаем индикатор при выходе игрока
             if (dialogueIndicator != null)
                 dialogueIndicator.SetActive(false);
             

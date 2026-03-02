@@ -1,52 +1,118 @@
-using Cinemachine;
 using UnityEngine;
 
-[RequireComponent(typeof(Collider))]
-public class CamZone_Dialogue : MonoBehaviour
+public class ForceCameraManager : MonoBehaviour
 {
-    [SerializeField]
-    private CinemachineVirtualCamera mainCam = null;
-    [SerializeField]
-    private CinemachineVirtualCamera dialogueCam = null;
-
+    [SerializeField] private GameObject mainCam;
+    [SerializeField] private GameObject ambCam;
+    [SerializeField] private GameObject loveCam;
+    [SerializeField] private GameObject thiefCam;
+    
+    private Camera mainCameraComponent;
+    private Camera ambCameraComponent;
+    private Camera loveCameraComponent;
+    private Camera thiefCameraComponent;
+    
     private void Start()
     {
-        if (mainCam != null) mainCam.enabled = true;
-        if (dialogueCam != null) dialogueCam.enabled = false;
+        // Получаем компоненты Camera
+        if (mainCam != null) mainCameraComponent = mainCam.GetComponent<Camera>();
+        if (ambCam != null) ambCameraComponent = ambCam.GetComponent<Camera>();
+        if (loveCam != null) loveCameraComponent = loveCam.GetComponent<Camera>();
+        if (thiefCam != null) thiefCameraComponent = thiefCam.GetComponent<Camera>();
+        
+        // Включаем только главную камеру
+        EnableOnlyMain();
     }
-
+    
     private void OnEnable()
     {
         if (DialogueManager.Instance != null)
         {
-            DialogueManager.Instance.OnDialogueStarted += EnableDialogueCam;
-            DialogueManager.Instance.OnDialogueEnded += EnableMainCam;
+            DialogueManager.Instance.OnDialogueStarted += OnDialogueStarted;
+            DialogueManager.Instance.OnDialogueEnded += OnDialogueEnded;
         }
     }
-
+    
     private void OnDisable()
     {
         if (DialogueManager.Instance != null)
         {
-            DialogueManager.Instance.OnDialogueStarted -= EnableDialogueCam;
-            DialogueManager.Instance.OnDialogueEnded -= EnableMainCam;
+            DialogueManager.Instance.OnDialogueStarted -= OnDialogueStarted;
+            DialogueManager.Instance.OnDialogueEnded -= OnDialogueEnded;
         }
     }
-
-    private void EnableDialogueCam()
+    
+    private void OnDialogueStarted()
     {
-        if (mainCam != null) mainCam.enabled = false;
-        if (dialogueCam != null) dialogueCam.enabled = true;
+        string speaker = DialogueManager.Instance.GetCurrentSpeakerName();
+        Debug.Log($"Dialogue with: {speaker}");
+        
+        // Выключаем все камеры
+        DisableAllCameras();
+        
+        // Включаем нужную
+        switch (speaker)
+        {
+            case "Любимая":
+                if (loveCameraComponent != null) loveCameraComponent.enabled = true;
+                Debug.Log($"LoveCam enabled: {loveCameraComponent?.enabled}");
+                break;
+            case "Amb":
+                if (ambCameraComponent != null) ambCameraComponent.enabled = true;
+                Debug.Log($"AmbCam enabled: {ambCameraComponent?.enabled}");
+                break;
+            case "Thief":
+                if (thiefCameraComponent != null) thiefCameraComponent.enabled = true;
+                Debug.Log($"ThiefCam enabled: {thiefCameraComponent?.enabled}");
+                break;
+        }
     }
-
-    private void EnableMainCam()
+    
+    private void OnDialogueEnded()
     {
-        if (mainCam != null) mainCam.enabled = true;
-        if (dialogueCam != null) dialogueCam.enabled = false;
+        Debug.Log("Dialogue ended");
+        EnableOnlyMain();
     }
-
-    private void OnValidate()
+    
+    private void EnableOnlyMain()
     {
-        GetComponent<Collider>().isTrigger = true;
+        DisableAllCameras();
+        if (mainCameraComponent != null) mainCameraComponent.enabled = true;
+    }
+    
+    private void DisableAllCameras()
+    {
+        if (mainCameraComponent != null) mainCameraComponent.enabled = false;
+        if (ambCameraComponent != null) ambCameraComponent.enabled = false;
+        if (loveCameraComponent != null) loveCameraComponent.enabled = false;
+        if (thiefCameraComponent != null) thiefCameraComponent.enabled = false;
+    }
+    
+    // Тест клавишами
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            DisableAllCameras();
+            if (ambCameraComponent != null) ambCameraComponent.enabled = true;
+            Debug.Log("1 - AmbCam");
+        }
+        if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            DisableAllCameras();
+            if (loveCameraComponent != null) loveCameraComponent.enabled = true;
+            Debug.Log("2 - LoveCam");
+        }
+        if (Input.GetKeyDown(KeyCode.Alpha3))
+        {
+            DisableAllCameras();
+            if (thiefCameraComponent != null) thiefCameraComponent.enabled = true;
+            Debug.Log("3 - ThiefCam");
+        }
+        if (Input.GetKeyDown(KeyCode.Alpha0))
+        {
+            EnableOnlyMain();
+            Debug.Log("0 - MainCam");
+        }
     }
 }
