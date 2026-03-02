@@ -2762,7 +2762,7 @@ MonoBehaviour:
   droppedItemPrefab: {fileID: 4122315345749798147, guid: adcb276803813df46ade4e0681fe55e5, type: 3}
   rewardIcon: {fileID: 1283254848}
   npcCollider: {fileID: 1066010109}
-  basePoint: {fileID: 0}
+  basePoint: {fileID: 1819426496}
   baseReturnDistance: 30
   playerDistanceCheck: 20
   currentState: 0
@@ -6490,6 +6490,37 @@ Transform:
   - {fileID: 1833271181}
   m_Father: {fileID: 8962794713488348411}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1819426495
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1819426496}
+  m_Layer: 0
+  m_Name: NPC Base Point
+  m_TagString: Untagged
+  m_Icon: {fileID: 3306451490063965843, guid: 0000000000000000d000000000000000, type: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1819426496
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1819426495}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -43.3, y: 1.97, z: -0.9}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1833271180
 GameObject:
   m_ObjectHideFlags: 3
@@ -9092,6 +9123,7 @@ SceneRoots:
   - {fileID: 1975186849}
   - {fileID: 881983745}
   - {fileID: 1066010112}
+  - {fileID: 1819426496}
   - {fileID: 1131674015878339863}
   - {fileID: 283026966712776076}
   - {fileID: 403120466}
