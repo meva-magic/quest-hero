@@ -6,14 +6,17 @@ using UnityEngine.InputSystem;
 public class BasicPlayer : MonoBehaviour
 {
     Rigidbody rb;
-    [SerializeField]
-    float moveSpeed = 10.0f;
+    [SerializeField] float moveSpeed = 10.0f;
     Vector3 moveInput;
     bool canMove = true;
     
     [Header("Footsteps")]
     [SerializeField] string footstepSoundName = "Footsteps";
     bool isMoving = false;
+    
+    [Header("Visual")]
+    [SerializeField] private GameObject playerModel; // Перетащите модель игрока сюда
+    [SerializeField] private bool hideModelDuringDialogue = true;
     
     void Awake()
     {
@@ -23,6 +26,25 @@ public class BasicPlayer : MonoBehaviour
         {
             DialogueManager.Instance.OnDialogueStarted += DisableMovement;
             DialogueManager.Instance.OnDialogueEnded += EnableMovement;
+            
+            // Добавляем скрытие модели
+            if (hideModelDuringDialogue)
+            {
+                DialogueManager.Instance.OnDialogueStarted += HideModel;
+                DialogueManager.Instance.OnDialogueEnded += ShowModel;
+            }
+        }
+        
+        // Если модель не назначена, используем дочерний объект с MeshRenderer
+        if (playerModel == null)
+        {
+            // Ищем MeshRenderer в дочерних объектах
+            MeshRenderer renderer = GetComponentInChildren<MeshRenderer>();
+            if (renderer != null)
+                playerModel = renderer.gameObject;
+            else
+                // Ищем SkinnedMeshRenderer (для анимированных моделей)
+                playerModel = GetComponentInChildren<SkinnedMeshRenderer>()?.gameObject;
         }
     }
     
@@ -42,13 +64,11 @@ public class BasicPlayer : MonoBehaviour
         // Handle footsteps sound
         if (isMoving && !wasMoving)
         {
-            // Started moving - play looping sound
             if (AudioManager.instance != null)
                 AudioManager.instance.Play(footstepSoundName);
         }
         else if (!isMoving && wasMoving)
         {
-            // Stopped moving - stop sound
             if (AudioManager.instance != null)
                 AudioManager.instance.Stop(footstepSoundName);
         }
@@ -60,6 +80,12 @@ public class BasicPlayer : MonoBehaviour
         {
             DialogueManager.Instance.OnDialogueStarted -= DisableMovement;
             DialogueManager.Instance.OnDialogueEnded -= EnableMovement;
+            
+            if (hideModelDuringDialogue)
+            {
+                DialogueManager.Instance.OnDialogueStarted -= HideModel;
+                DialogueManager.Instance.OnDialogueEnded -= ShowModel;
+            }
         }
     }
     
@@ -93,7 +119,6 @@ public class BasicPlayer : MonoBehaviour
         moveInput = Vector3.zero;
         rb.velocity = Vector3.zero;
         
-        // Stop footsteps when movement disabled
         if (AudioManager.instance != null)
             AudioManager.instance.Stop(footstepSoundName);
     }
@@ -106,6 +131,19 @@ public class BasicPlayer : MonoBehaviour
         }
     }
     
+    // Новые методы для скрытия/показа модели
+    private void HideModel()
+    {
+        if (playerModel != null)
+            playerModel.SetActive(false);
+    }
+    
+    private void ShowModel()
+    {
+        if (playerModel != null)
+            playerModel.SetActive(true);
+    }
+    
     public void SetMovementEnabled(bool enabled)
     {
         canMove = enabled;
@@ -114,7 +152,6 @@ public class BasicPlayer : MonoBehaviour
             moveInput = Vector3.zero;
             rb.velocity = Vector3.zero;
             
-            // Stop footsteps when movement disabled
             if (AudioManager.instance != null)
                 AudioManager.instance.Stop(footstepSoundName);
         }

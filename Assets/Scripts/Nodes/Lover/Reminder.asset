@@ -12,6 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d321b6a4364c51640af3f1c3bb472d7e, type: 3}
   m_Name: Reminder
   m_EditorClassIdentifier: 
-  dialogueText: 
-  responses: []
+  dialogueText: "\u0412\u0438\u0434\u0435\u0442\u044C \u0442\u0435\u0431\u044F \u043D\u0435
+    \u0445\u043E\u0447\u0443!\n"
+  responses:
+  - responseText: "\u0423\u0445\u043E\u0436\u0443"
+    nextNode: {fileID: 0}
+    activateQuest: 0
+    questNode: {fileID: 0}
+    finishQuest: 0
+    giveReward: 0
   isRepeatingNode: 0

@@ -1,32 +1,42 @@
 using Cinemachine;
 using UnityEngine;
+using System.Collections.Generic;
 
-[RequireComponent(typeof(Collider))]
-public class CamZone_Location : MonoBehaviour
+public class CamZoneManager : MonoBehaviour
 {
-    [SerializeField]
-    private CinemachineVirtualCamera mainCam = null;
-    [SerializeField]
-    private CinemachineVirtualCamera zoneCam = null;
-
-    private bool isPlayerInZone = false;
-
+    [Header("Main Cameras")]
+    [SerializeField] private CinemachineVirtualCamera mainCam;
+    [SerializeField] private CinemachineVirtualCamera dialogueCam;
+    
+    [Header("Zone Cameras")]
+    [SerializeField] private List<ZoneCamera> zoneCameras = new List<ZoneCamera>();
+    
+    [System.Serializable]
+    public class ZoneCamera
+    {
+        public string zoneID;
+        public CinemachineVirtualCamera camera;
+        public bool isActive = false;
+    }
+    
+    private string currentZoneID = "";
+    private bool inDialogue = false;
+    
     private void Start()
     {
-        if (mainCam != null) mainCam.enabled = true;
-        if (zoneCam != null) zoneCam.enabled = false;
+        // Включаем основную камеру
+        EnableMainCam();
     }
-
+    
     private void OnEnable()
     {
-        // Listen for dialogue events
         if (DialogueManager.Instance != null)
         {
             DialogueManager.Instance.OnDialogueStarted += OnDialogueStarted;
             DialogueManager.Instance.OnDialogueEnded += OnDialogueEnded;
         }
     }
-
+    
     private void OnDisable()
     {
         if (DialogueManager.Instance != null)
@@ -35,69 +45,120 @@ public class CamZone_Location : MonoBehaviour
             DialogueManager.Instance.OnDialogueEnded -= OnDialogueEnded;
         }
     }
-
-    private void OnTriggerEnter(Collider other)
+    
+    public void SwitchToZone(string zoneID, CinemachineVirtualCamera zoneCam)
     {
-        if (other.CompareTag("Player"))
+        if (inDialogue) return; // Диалог важнее
+        
+        // Выключаем предыдущую зону
+        if (!string.IsNullOrEmpty(currentZoneID))
         {
-            isPlayerInZone = true;
-            
-            // Only switch camera if not in dialogue
-            if (!DialogueManager.Instance.IsDialogueActive())
+            foreach (var zc in zoneCameras)
             {
-                EnableZoneCam();
+                if (zc.zoneID == currentZoneID && zc.camera != null)
+                {
+                    zc.camera.enabled = false;
+                    zc.isActive = false;
+                }
             }
         }
-    }
-
-    private void OnTriggerExit(Collider other)
-    {
-        if (other.CompareTag("Player"))
+        
+        // Включаем новую зону
+        currentZoneID = zoneID;
+        
+        // Находим и включаем камеру
+        bool found = false;
+        foreach (var zc in zoneCameras)
         {
-            isPlayerInZone = false;
-            
-            // Only switch back if not in dialogue
-            if (!DialogueManager.Instance.IsDialogueActive())
+            if (zc.zoneID == zoneID)
             {
-                EnableMainCam();
+                if (zc.camera != null)
+                {
+                    zc.camera.enabled = true;
+                    zc.isActive = true;
+                    found = true;
+                }
+                break;
             }
         }
+        
+        // Если не нашли в списке, используем переданную камеру
+        if (!found && zoneCam != null)
+        {
+            zoneCam.enabled = true;
+            zoneCameras.Add(new ZoneCamera { zoneID = zoneID, camera = zoneCam, isActive = true });
+        }
+        
+        // Выключаем основную камеру
+        if (mainCam != null) mainCam.enabled = false;
     }
-
+    
+    public void ExitZone(string zoneID)
+    {
+        if (currentZoneID != zoneID) return;
+        if (inDialogue) return;
+        
+        // Выключаем камеру зоны
+        foreach (var zc in zoneCameras)
+        {
+            if (zc.zoneID == zoneID && zc.camera != null)
+            {
+                zc.camera.enabled = false;
+                zc.isActive = false;
+                break;
+            }
+        }
+        
+        currentZoneID = "";
+        
+        // Включаем основную камеру
+        EnableMainCam();
+    }
+    
     private void OnDialogueStarted()
     {
-        // Dialogue takes priority - let dialogue cam handle it
-        // Just disable our zone cam if it's active
-        if (zoneCam != null) zoneCam.enabled = false;
+        inDialogue = true;
+        
+        // Выключаем все зоны
+        foreach (var zc in zoneCameras)
+        {
+            if (zc.camera != null)
+                zc.camera.enabled = false;
+        }
+        
+        // Включаем диалоговую камеру
+        if (mainCam != null) mainCam.enabled = false;
+        if (dialogueCam != null) dialogueCam.enabled = true;
     }
-
+    
     private void OnDialogueEnded()
     {
-        // Dialogue ended - restore zone cam if player is still in zone
-        if (isPlayerInZone && !DialogueManager.Instance.IsDialogueActive())
+        inDialogue = false;
+        
+        // Выключаем диалоговую камеру
+        if (dialogueCam != null) dialogueCam.enabled = false;
+        
+        // Возвращаемся к зоне, если игрок все еще в ней
+        if (!string.IsNullOrEmpty(currentZoneID))
         {
-            EnableZoneCam();
+            foreach (var zc in zoneCameras)
+            {
+                if (zc.zoneID == currentZoneID && zc.camera != null)
+                {
+                    zc.camera.enabled = true;
+                    if (mainCam != null) mainCam.enabled = false;
+                    return;
+                }
+            }
         }
-        else
-        {
-            EnableMainCam();
-        }
+        
+        // Иначе включаем основную камеру
+        EnableMainCam();
     }
-
-    private void EnableZoneCam()
-    {
-        if (mainCam != null) mainCam.enabled = false;
-        if (zoneCam != null) zoneCam.enabled = true;
-    }
-
+    
     private void EnableMainCam()
     {
         if (mainCam != null) mainCam.enabled = true;
-        if (zoneCam != null) zoneCam.enabled = false;
-    }
-
-    private void OnValidate()
-    {
-        GetComponent<Collider>().isTrigger = true;
+        if (dialogueCam != null) dialogueCam.enabled = false;
     }
 }

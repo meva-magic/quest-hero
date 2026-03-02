@@ -12,10 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d321b6a4364c51640af3f1c3bb472d7e, type: 3}
   m_Name: Lover Root
   m_EditorClassIdentifier: 
-  dialogueText: "\u041F\u0440\u0438\u0432\u0435\u0442"
+  dialogueText: "\u041E\u0439, \u0435\u0449\u0451 \u043E\u0434\u0438\u043D! \u042F
+    \u0432\u0441\u0435 \u0436\u0434\u0443 \u043A\u043E\u0433\u0434\u0430 \u044D\u0442\u043E\u0442
+    \u0442\u0440\u0443\u0441 \u043D\u0430\u043A\u043E\u043D\u0435\u0446 \u043F\u0440\u0438\u0434\u0451\u0442
+    \u0441\u0430\u043C!"
   responses:
-  - responseText: "\u043F\u0440\u0438\u0432\u0435\u0442"
-    nextNode: {fileID: 0}
+  - responseText: "\u042F \u043E\u0442 \u043D\u0435\u0433\u043E"
+    nextNode: {fileID: 11400000, guid: 96111693cd75ced4b9c73cac6b2c7ee8, type: 2}
     activateQuest: 0
     questNode: {fileID: 0}
     finishQuest: 0
