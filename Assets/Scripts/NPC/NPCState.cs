@@ -14,7 +14,6 @@ public enum NPCState
 
 public class HideSeekNPC : MonoBehaviour
 {
-    [Header("Components")]
     [SerializeField] private NavMeshAgent agent;
     [SerializeField] private Dialogue dialogueAsset;
     [SerializeField] private ItemObject questItem;
@@ -22,41 +21,34 @@ public class HideSeekNPC : MonoBehaviour
     [SerializeField] private GameObject rewardIcon;
     [SerializeField] private Collider npcCollider;
     
-    [Header("=== БАЗА ===")]
+    [Header("base")]
     [SerializeField] private Transform basePoint;
     [SerializeField] private float baseReturnDistance = 30f;
     [SerializeField] private float playerDistanceCheck = 20f;
     
-    [Header("=== BEHAVIOR ===")]
     public NPCState currentState = NPCState.Base;
     
-    [Header("State Dialogue Lines")]
     [SerializeField] private List<string> idleLines = new List<string>();
     [SerializeField] private List<string> findLines = new List<string>();
     [SerializeField] private List<string> runLines = new List<string>();
     [SerializeField] private List<string> dieLines = new List<string>();
     
-    [Header("Dialogue Settings")]
     [SerializeField] private float dialogueInterval = 3f;
     [SerializeField] private bool showStateDialogue = true;
     
-    [Header("Speeds")]
     [SerializeField] private float wanderSpeed = 6f;
     [SerializeField] private float approachSpeed = 10f;
     [SerializeField] private float runSpeed = 8f;
     [SerializeField] private float dieSpeed = 13f;
     
-    [Header("Distances")]
     [SerializeField] private float detectionRange = 8f;
     [SerializeField] private float runTriggerDistance = 5f;
     [SerializeField] private float safeDistance = 30f;
     [SerializeField] private float wanderRadius = 18f;
     
-    [Header("Timing")]
     [SerializeField] private float findDelay = 3f;
     [SerializeField] private float runFastDuration = 4f;
     
-    [Header("Effects")]
     [SerializeField] private float wobbleAmount = 1f;
     
     private float timeSinceLastPlayerContact;

@@ -10,7 +10,8 @@ public class Speaker : MonoBehaviour
     private bool isDialogueActive = false;
     private DialogueNode repeatingNode = null;
     
-    [SerializeField] private GameObject dialogueIndicator;
+    [Header("Indicator")]
+    [SerializeField] private GameObject dialogueIndicator; // Просто объект для активации (значок над головой)
     [SerializeField] private KeyCode dialogueKey = KeyCode.Space;
 
     private void Start()
@@ -49,24 +50,10 @@ public class Speaker : MonoBehaviour
  
     private void Update()
     {
-        if (inRange && Input.GetKeyDown(dialogueKey) && !isDialogueActive)
+        if (inRange && Input.GetKeyDown(dialogueKey) && !isDialogueActive && !DialogueManager.Instance.IsDialogueActive())
         {
             SpeakTo();
         }
-        
-        UpdateDialogueIndicator();
-    }
-    
-    private void UpdateDialogueIndicator()
-    {
-        if (dialogueIndicator == null) return;
-        
-        bool shouldShow = inRange && 
-                         !isDialogueActive && 
-                         DialogueManager.Instance != null && 
-                         !DialogueManager.Instance.IsDialogueActive();
-        
-        dialogueIndicator.SetActive(shouldShow);
     }
  
     public void SpeakTo()
@@ -74,6 +61,10 @@ public class Speaker : MonoBehaviour
         if (DialogueManager.Instance.IsDialogueActive()) return;
         
         isDialogueActive = true;
+        
+        // Скрываем индикатор когда начинаем диалог
+        if (dialogueIndicator != null)
+            dialogueIndicator.SetActive(false);
         
         if (repeatingNode != null)
         {
@@ -158,6 +149,10 @@ public class Speaker : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             inRange = true;
+            
+            // Включаем индикатор при входе игрока в зону
+            if (dialogueIndicator != null && !isDialogueActive)
+                dialogueIndicator.SetActive(true);
         }
     }
 
@@ -166,6 +161,10 @@ public class Speaker : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             inRange = false;
+            
+            // Выключаем индикатор при выходе игрока
+            if (dialogueIndicator != null)
+                dialogueIndicator.SetActive(false);
             
             if (DialogueManager.Instance.IsDialogueActive() && 
                 DialogueManager.Instance.GetCurrentSpeakerName() == Name)
