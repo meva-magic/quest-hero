@@ -1,124 +1,135 @@
 using UnityEngine;
 using UnityEngine.Rendering;
-using System.Collections.Generic;
 
 public class DayNightCycle : MonoBehaviour
 {
     [System.Serializable]
     public class TimePreset
     {
-        public string name = "Morning";
+        public string name = "Day";
         public Material skybox;
         public VolumeProfile volumeProfile;
-        public GameObject particleEffect; // Префаб эффекта (дождь, снег, туман и т.д.)
-        public Color ambientLight = Color.white;
-        public float lightIntensity = 1f;
+        public GameObject particleEffectPrefab;
+        public float duration = 60f;
     }
+
+    [Header("Time Presets")]
+    [SerializeField] private TimePreset dayPreset;
+    [SerializeField] private TimePreset nightPreset;
     
-    [Header("Time Settings")]
-    [SerializeField] private List<TimePreset> timePresets = new List<TimePreset>();
-    [SerializeField] private float timeBetweenPresets = 60f; // Секунд между сменами
+    [Header("Skybox Rotation")]
+    [SerializeField] private float skyboxRotationSpeed = 1f;
+    
+    [Header("Settings")]
+    [SerializeField] private bool startOnAwake = true;
+    [SerializeField] private bool startWithDay = true;
     
     [Header("References")]
-    [SerializeField] private Light sunLight;
-    [SerializeField] private Volume globalVolume;
-    [SerializeField] private Transform particleParent; // Куда создавать эффекты
+    [SerializeField] private Transform particleParent;
+    [SerializeField] private Volume globalVolume; // Ссылка на Global Volume в сцене
     
-    private int currentPresetIndex = 0;
+    private bool isDay = true;
     private float timer = 0f;
-    private GameObject currentEffect = null;
-    
+    private float skyboxRotation = 0f;
+    private GameObject currentParticleEffect;
+    private Material currentSkybox;
+
     void Start()
     {
-        if (timePresets.Count == 0)
-        {
-            Debug.LogWarning("No time presets assigned!");
-            return;
-        }
+        if (particleParent == null)
+            particleParent = transform;
         
-        // Применяем первый пресет
-        ApplyPreset(currentPresetIndex);
+        if (startOnAwake)
+        {
+            isDay = startWithDay;
+            ApplyPreset(isDay);
+        }
     }
-    
+
     void Update()
     {
-        if (timePresets.Count == 0) return;
+        // Вращаем скайбокс
+        if (currentSkybox != null)
+        {
+            skyboxRotation += Time.deltaTime * skyboxRotationSpeed;
+            if (skyboxRotation > 360f) skyboxRotation -= 360f;
+            
+            currentSkybox.SetFloat("_Rotation", skyboxRotation);
+        }
         
         timer += Time.deltaTime;
         
-        if (timer >= timeBetweenPresets)
+        float currentDuration = isDay ? dayPreset.duration : nightPreset.duration;
+        
+        if (timer >= currentDuration)
         {
-            timer = 0f;
-            NextPreset();
+            ToggleTime();
         }
     }
-    
-    void NextPreset()
+
+    public void ToggleTime()
     {
-        currentPresetIndex++;
-        if (currentPresetIndex >= timePresets.Count)
-            currentPresetIndex = 0;
-        
-        ApplyPreset(currentPresetIndex);
-        Debug.Log($"Time changed to: {timePresets[currentPresetIndex].name}");
+        isDay = !isDay;
+        ApplyPreset(isDay);
     }
-    
-    void ApplyPreset(int index)
+
+    public void SetDay()
     {
-        TimePreset preset = timePresets[index];
+        if (!isDay)
+        {
+            isDay = true;
+            ApplyPreset(true);
+        }
+    }
+
+    public void SetNight()
+    {
+        if (isDay)
+        {
+            isDay = false;
+            ApplyPreset(false);
+        }
+    }
+
+    void ApplyPreset(bool day)
+    {
+        TimePreset preset = day ? dayPreset : nightPreset;
         
-        // Смена скайбокса
+        // Меняем скайбокс
         if (preset.skybox != null)
         {
-            RenderSettings.skybox = preset.skybox;
+            currentSkybox = preset.skybox;
+            RenderSettings.skybox = currentSkybox;
         }
         
-        // Смена ambient light
-        RenderSettings.ambientLight = preset.ambientLight;
-        
-        // Смена Global Volume
+        // Меняем Global Volume (используем ссылку из сцены)
         if (globalVolume != null && preset.volumeProfile != null)
-        {
             globalVolume.profile = preset.volumeProfile;
+        else
+            Debug.LogWarning("Global Volume reference is missing or volume profile is null");
+        
+        // Удаляем старый эффект
+        if (currentParticleEffect != null)
+            Destroy(currentParticleEffect);
+        
+        // Спавним новый эффект
+        if (preset.particleEffectPrefab != null)
+        {
+            currentParticleEffect = Instantiate(preset.particleEffectPrefab, particleParent);
+            currentParticleEffect.transform.localPosition = Vector3.zero;
         }
         
-        // Смена освещения
-        if (sunLight != null)
-        {
-            sunLight.intensity = preset.lightIntensity;
-            
-            // Простая смена угла солнца (по индексу)
-            float angle = (index / (float)timePresets.Count) * 360f;
-            sunLight.transform.rotation = Quaternion.Euler(angle, -30f, 0f);
-        }
+        timer = 0f;
         
-        // Смена партикл эффекта
-        if (particleParent != null)
-        {
-            // Удаляем старый эффект
-            if (currentEffect != null)
-                Destroy(currentEffect);
-            
-            // Создаем новый
-            if (preset.particleEffect != null)
-            {
-                currentEffect = Instantiate(preset.particleEffect, particleParent);
-            }
-        }
+        Debug.Log($"DayNightCycle: Switched to {(day ? "DAY" : "NIGHT")}");
     }
-    
-    // Методы для ручного управления
-    public void SetPreset(int index)
+
+    private void OnValidate()
     {
-        if (index >= 0 && index < timePresets.Count)
-        {
-            currentPresetIndex = index;
-            ApplyPreset(index);
-        }
-    }
-    
-    public void NextPresetManual()
-    {
-        NextPreset();
+        if (dayPreset == null)
+            dayPreset = new TimePreset { name = "Day", duration = 60f };
+        
+        if (nightPreset == null)
+            nightPreset = new TimePreset { name = "Night", duration = 60f };
     }
 }
