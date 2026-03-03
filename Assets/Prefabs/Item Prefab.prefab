@@ -85,5 +85,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e6b64cc48f7321a4fbff0d182b125d0e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  randomInit: 1
-  speed: 180
+  bobHeight: 0.5
+  bobSpeed: 2
+  randomizeOffset: 1
+  randomizeSpeed: 0

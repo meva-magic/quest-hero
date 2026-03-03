@@ -15,6 +15,10 @@ public class PauseMenuManager : MonoBehaviour
     [SerializeField] private Button confirmYesButton;
     [SerializeField] private Button confirmNoButton;
     
+    [Header("Music")]
+    [SerializeField] private string mainTheme = "MainTheme";
+    [SerializeField] private string menuTheme = "MenuMusic";
+    
     private void Awake()
     {
         if (Instance == null)
@@ -88,10 +92,36 @@ public class PauseMenuManager : MonoBehaviour
         if (!isPaused)
         {
             Show();
+            SwitchToMenuMusic();
         }
         else
         {
             Hide();
+            SwitchToMainMusic();
+        }
+    }
+    
+    private void SwitchToMenuMusic()
+    {
+        if (AudioManager.instance != null)
+        {
+            if (AudioManager.instance.IsPlaying(mainTheme))
+                AudioManager.instance.Stop(mainTheme);
+            
+            if (!AudioManager.instance.IsPlaying(menuTheme))
+                AudioManager.instance.Play(menuTheme);
+        }
+    }
+    
+    private void SwitchToMainMusic()
+    {
+        if (AudioManager.instance != null)
+        {
+            if (AudioManager.instance.IsPlaying(menuTheme))
+                AudioManager.instance.Stop(menuTheme);
+            
+            if (!AudioManager.instance.IsPlaying(mainTheme))
+                AudioManager.instance.Play(mainTheme);
         }
     }
     
@@ -128,6 +158,7 @@ public class PauseMenuManager : MonoBehaviour
     {
         if (pausePanel != null)
             pausePanel.SetActive(true);
+        SwitchToMenuMusic();
     }
     
     public void Hide()
@@ -137,6 +168,8 @@ public class PauseMenuManager : MonoBehaviour
             
         if (confirmationDialog != null)
             confirmationDialog.SetActive(false);
+            
+        SwitchToMainMusic();
     }
     
     private void OnDestroy()

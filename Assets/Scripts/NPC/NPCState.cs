@@ -14,6 +14,7 @@ public enum NPCState
 
 public class HideSeekNPC : MonoBehaviour
 {
+    [Header("Components")]
     [SerializeField] private NavMeshAgent agent;
     [SerializeField] private Dialogue dialogueAsset;
     [SerializeField] private ItemObject questItem;
@@ -21,35 +22,46 @@ public class HideSeekNPC : MonoBehaviour
     [SerializeField] private GameObject rewardIcon;
     [SerializeField] private Collider npcCollider;
     
-    [Header("base")]
+    [Header("=== БАЗА ===")]
     [SerializeField] private Transform basePoint;
     [SerializeField] private float baseReturnDistance = 30f;
     [SerializeField] private float playerDistanceCheck = 20f;
     
+    [Header("=== BEHAVIOR ===")]
     public NPCState currentState = NPCState.Base;
     
+    [Header("State Dialogue Lines")]
     [SerializeField] private List<string> idleLines = new List<string>();
     [SerializeField] private List<string> findLines = new List<string>();
     [SerializeField] private List<string> runLines = new List<string>();
     [SerializeField] private List<string> dieLines = new List<string>();
     
+    [Header("Dialogue Settings")]
     [SerializeField] private float dialogueInterval = 3f;
     [SerializeField] private bool showStateDialogue = true;
     
+    [Header("Speeds")]
     [SerializeField] private float wanderSpeed = 6f;
     [SerializeField] private float approachSpeed = 10f;
     [SerializeField] private float runSpeed = 8f;
     [SerializeField] private float dieSpeed = 13f;
     
+    [Header("Distances")]
     [SerializeField] private float detectionRange = 8f;
     [SerializeField] private float runTriggerDistance = 5f;
     [SerializeField] private float safeDistance = 30f;
     [SerializeField] private float wanderRadius = 18f;
     
+    [Header("Timing")]
     [SerializeField] private float findDelay = 3f;
     [SerializeField] private float runFastDuration = 4f;
     
+    [Header("Effects")]
     [SerializeField] private float wobbleAmount = 1f;
+    
+    [Header("Reward Effects")]
+    [SerializeField] private GameObject rewardParticlePrefab;
+    [SerializeField] private string rewardSoundName = "Reward";
     
     private float timeSinceLastPlayerContact;
     private bool hasGivenItem = false;
@@ -75,7 +87,6 @@ public class HideSeekNPC : MonoBehaviour
         if (rewardIcon != null)
             rewardIcon.SetActive(true);
         
-        // Если база не задана, используем текущую позицию
         if (basePoint == null)
         {
             GameObject baseObj = new GameObject(name + "_BasePoint");
@@ -96,11 +107,9 @@ public class HideSeekNPC : MonoBehaviour
         float distToPlayer = Vector3.Distance(transform.position, player.position);
         float distToBase = Vector3.Distance(transform.position, basePoint.position);
         
-        // ИЗМЕНЕНИЕ: Проверка расстояния до базы ИЛИ до игрока
         bool tooFarFromBase = distToBase > baseReturnDistance;
         bool tooFarFromPlayer = distToPlayer > playerDistanceCheck;
         
-        // Если слишком далеко от базы ИЛИ от игрока - возвращаемся
         if ((tooFarFromBase || tooFarFromPlayer) && 
             currentState != NPCState.Die && 
             currentState != NPCState.Base)
@@ -110,7 +119,6 @@ public class HideSeekNPC : MonoBehaviour
             return;
         }
         
-        // CRITICAL: Always check for run trigger regardless of state
         if (distToPlayer < runTriggerDistance && currentState != NPCState.Die && currentState != NPCState.Run && currentState != NPCState.Base)
         {
             StartRun();
@@ -121,7 +129,6 @@ public class HideSeekNPC : MonoBehaviour
         {
             case NPCState.Base:
                 UpdateBase();
-                // Если игрок достаточно близко и NPC не слишком далеко от базы, переходим в Idle
                 if (distToPlayer < detectionRange * 2 && distToBase < baseReturnDistance * 0.7f)
                 {
                     StartIdle();
@@ -160,7 +167,6 @@ public class HideSeekNPC : MonoBehaviour
         }
     }
     
-    // НОВЫЙ МЕТОД: Возвращение на базу
     void StartReturnToBase()
     {
         if (currentState == NPCState.Die || currentState == NPCState.Base) return;
@@ -170,7 +176,6 @@ public class HideSeekNPC : MonoBehaviour
         agent.isStopped = false;
         agent.SetDestination(basePoint.position);
         
-        // Останавливаем диалоговые реплики
         if (dialogueRoutine != null)
         {
             StopCoroutine(dialogueRoutine);
@@ -178,24 +183,19 @@ public class HideSeekNPC : MonoBehaviour
         }
     }
     
-    // НОВЫЙ МЕТОД: Обновление состояния базы
     void UpdateBase()
     {
-        // Стоим на месте или идем к базовой точке
         float distToBase = Vector3.Distance(transform.position, basePoint.position);
         
         if (distToBase > 1f)
         {
-            // Идем к базе
             agent.speed = wanderSpeed;
             agent.SetDestination(basePoint.position);
         }
         else
         {
-            // Дошли до базы - стоим
             agent.isStopped = true;
             
-            // Можно добавить легкое покачивание
             Vector3 wobble = new Vector3(
                 Mathf.Sin(wobblePhase) * 0.2f * Time.deltaTime,
                 0,
@@ -203,7 +203,6 @@ public class HideSeekNPC : MonoBehaviour
             );
             transform.position += wobble;
             
-            // Смотрим на игрока, если он рядом
             float distToPlayer = Vector3.Distance(transform.position, player.position);
             if (distToPlayer < detectionRange * 2)
             {
@@ -220,11 +219,9 @@ public class HideSeekNPC : MonoBehaviour
         agent.speed = wanderSpeed;
         agent.isStopped = false;
         
-        // Enable collision in Idle
         if (npcCollider != null && !npcCollider.enabled)
             npcCollider.enabled = true;
         
-        // Wobble in Idle
         Vector3 wobble = new Vector3(
             Mathf.Sin(wobblePhase) * wobbleAmount * Time.deltaTime,
             0,
@@ -244,20 +241,17 @@ public class HideSeekNPC : MonoBehaviour
     
     void UpdateFind()
     {
-        // DISABLE collision in Find state
         if (npcCollider != null && npcCollider.enabled)
             npcCollider.enabled = false;
         
         float distToPlayer = Vector3.Distance(transform.position, player.position);
         
-        // If we're already too close, run immediately
         if (distToPlayer < runTriggerDistance)
         {
             StartRun();
             return;
         }
         
-        // Move to exactly runTriggerDistance away from player
         Vector3 directionToPlayer = (player.position - transform.position).normalized;
         Vector3 targetPosition = player.position - (directionToPlayer * runTriggerDistance);
         
@@ -272,7 +266,6 @@ public class HideSeekNPC : MonoBehaviour
             runTimer += Time.deltaTime;
             agent.speed = runSpeed;
             
-            // DISABLE collision during fast run
             if (npcCollider != null && npcCollider.enabled)
                 npcCollider.enabled = false;
             
@@ -283,7 +276,6 @@ public class HideSeekNPC : MonoBehaviour
         {
             agent.speed = runSpeed * 0.6f;
             
-            // ENABLE collision when slows down (catchable)
             if (npcCollider != null && !npcCollider.enabled)
                 npcCollider.enabled = true;
         }
@@ -303,11 +295,9 @@ public class HideSeekNPC : MonoBehaviour
     {
         agent.speed = dieSpeed;
         
-        // Enable collision in Die
         if (npcCollider != null && !npcCollider.enabled)
             npcCollider.enabled = true;
         
-        // Slight wobble in Die
         Vector3 wobble = new Vector3(
             Mathf.Sin(wobblePhase * 3f) * wobbleAmount * 0.5f * Time.deltaTime,
             0,
@@ -345,7 +335,6 @@ public class HideSeekNPC : MonoBehaviour
         agent.isStopped = false;
         timeSinceLastPlayerContact = 0f;
         
-        // Start state dialogue if state changed
         if (showStateDialogue && previousState != currentState)
             StartStateDialogue(NPCState.Idle);
     }
@@ -359,7 +348,6 @@ public class HideSeekNPC : MonoBehaviour
         agent.isStopped = false;
         timeSinceLastPlayerContact = 0f;
         
-        // Start state dialogue if state changed
         if (showStateDialogue && previousState != currentState)
             StartStateDialogue(NPCState.Find);
     }
@@ -375,11 +363,9 @@ public class HideSeekNPC : MonoBehaviour
         isRunningFast = true;
         runTimer = 0f;
         
-        // Start state dialogue if state changed
         if (showStateDialogue && previousState != currentState)
             StartStateDialogue(NPCState.Run);
         
-        // Immediately set run destination
         Vector3 runDir = (transform.position - player.position).normalized;
         if (runDir == Vector3.zero) runDir = transform.forward;
         
@@ -395,7 +381,6 @@ public class HideSeekNPC : MonoBehaviour
         currentState = NPCState.Die;
         agent.isStopped = false;
         
-        // Start state dialogue if state changed
         if (showStateDialogue && previousState != currentState)
             StartStateDialogue(NPCState.Die);
         
@@ -445,7 +430,6 @@ public class HideSeekNPC : MonoBehaviour
         {
             timeSinceLastPlayerContact = 0f;
             
-            // Only catch if during slow run with collision enabled
             if (!isInDialogue && !hasGivenItem && currentState == NPCState.Run && !isRunningFast)
             {
                 if (npcCollider != null && npcCollider.enabled)
@@ -529,22 +513,29 @@ public class HideSeekNPC : MonoBehaviour
             if (dropped != null)
                 dropped.Initialize(questItem);
             
-            if (AudioManager.instance != null)
-                AudioManager.instance.Play("Drop");
+            PlayRewardEffects(spawnPos);
         }
         
         isInDialogue = false;
         StartDie();
     }
-
-    // НОВЫЙ МЕТОД: Для получения условий от NPCBaseZone
+    
+    private void PlayRewardEffects(Vector3 position)
+    {
+        if (AudioManager.instance != null && !string.IsNullOrEmpty(rewardSoundName))
+            AudioManager.instance.Play(rewardSoundName);
+        
+        if (rewardParticlePrefab != null)
+        {
+            Instantiate(rewardParticlePrefab, position, Quaternion.identity);
+        }
+    }
+    
     public void SetBaseReturnConditions(float distToBase, float distToPlayer, float baseReturnDist, float playerCheckDist)
     {
-        // Используем переданные значения для проверки возврата
         bool tooFarFromBase = distToBase > baseReturnDist;
         bool tooFarFromPlayer = distToPlayer > playerCheckDist;
         
-        // Если слишком далеко от базы ИЛИ от игрока - возвращаемся
         if ((tooFarFromBase || tooFarFromPlayer) && 
             currentState != NPCState.Die && 
             currentState != NPCState.Base)

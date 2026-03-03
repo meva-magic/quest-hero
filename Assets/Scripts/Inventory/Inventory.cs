@@ -11,6 +11,11 @@ public class Inventory : MonoBehaviour
     [SerializeField] private Transform itemDropSpawnPoint;
     [SerializeField] GameObject droppedItemPrefab;
     [SerializeField] SerializedDictionary<string, ItemObject> inventory = new();
+    
+    [Header("Effects")]
+    [SerializeField] private GameObject dropParticlePrefab;
+    [SerializeField] private string pickUpSound = "PickUp";
+    [SerializeField] private string dropSound = "Drop";
 
     public SerializedDictionary<string, ItemObject> Items => inventory;
 
@@ -82,7 +87,7 @@ public class Inventory : MonoBehaviour
             Destroy(other.gameObject);
 
             if (AudioManager.instance != null)
-                AudioManager.instance.Play("PickUp");
+                AudioManager.instance.Play(pickUpSound);
         }
     }
 
@@ -113,6 +118,12 @@ public class Inventory : MonoBehaviour
                 if (droppedItem != null)
                 {
                     droppedItem.Initialize(item);
+                    
+                    // Партикл при выбрасывании
+                    if (dropParticlePrefab != null)
+                    {
+                        Instantiate(dropParticlePrefab, dropPosition, Quaternion.identity);
+                    }
                 }
             }
             
@@ -122,7 +133,7 @@ public class Inventory : MonoBehaviour
                 ui.RemoveUIItem(inventoryId);
             
             if (AudioManager.instance != null)
-                AudioManager.instance.Play("Drop");
+                AudioManager.instance.Play(dropSound);
         }
     }
 }

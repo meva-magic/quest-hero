@@ -29,6 +29,18 @@ PrefabInstance:
       value: CoinItem Variant
       objectReference: {fileID: 0}
     - target: {fileID: 6015922765806447858, guid: adcb276803813df46ade4e0681fe55e5, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6015922765806447858, guid: adcb276803813df46ade4e0681fe55e5, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6015922765806447858, guid: adcb276803813df46ade4e0681fe55e5, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6015922765806447858, guid: adcb276803813df46ade4e0681fe55e5, type: 3}
       propertyPath: m_LocalPosition.x
       value: -4
       objectReference: {fileID: 0}

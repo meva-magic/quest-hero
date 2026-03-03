@@ -18,6 +18,10 @@ public class QuestManager : MonoBehaviour
     
     [SerializeField] private GameObject wallToDisable;
     
+    [Header("Reward Effects")]
+    [SerializeField] private GameObject questRewardParticlePrefab;
+    [SerializeField] private string questRewardSoundName = "Reward";
+    
     public delegate void QuestUpdateHandler();
     public event QuestUpdateHandler OnQuestUpdated;
 
@@ -145,11 +149,21 @@ public class QuestManager : MonoBehaviour
                 droppedItem.autoStart = true;
             }
             
-            if (AudioManager.instance != null)
-                AudioManager.instance.Play("Reward");
+            PlayRewardEffects(spawnPosition);
         }
         catch
         {
+        }
+    }
+    
+    private void PlayRewardEffects(Vector3 position)
+    {
+        if (AudioManager.instance != null && !string.IsNullOrEmpty(questRewardSoundName))
+            AudioManager.instance.Play(questRewardSoundName);
+        
+        if (questRewardParticlePrefab != null)
+        {
+            Instantiate(questRewardParticlePrefab, position, Quaternion.identity);
         }
     }
     

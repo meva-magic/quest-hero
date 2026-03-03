@@ -8,6 +8,10 @@ public class GameManager : MonoBehaviour
     [SerializeField] private string mainMenuScene = "MainMenu";
     [SerializeField] private string gameScene = "Game";
     
+    [Header("Music")]
+    [SerializeField] private string mainTheme = "MainTheme";
+    [SerializeField] private string menuTheme = "MenuMusic";
+    
     private bool isPaused = false;
     
     private void Awake()
@@ -28,8 +32,8 @@ public class GameManager : MonoBehaviour
         
         if (AudioManager.instance != null)
         {
-            AudioManager.instance.Stop("MenuMusic");
-            AudioManager.instance.Play("MainTheme");
+            AudioManager.instance.Stop(menuTheme);
+            AudioManager.instance.Play(mainTheme);
         }
     }
     
@@ -40,8 +44,8 @@ public class GameManager : MonoBehaviour
         
         if (AudioManager.instance != null)
         {
-            AudioManager.instance.Stop("MainTheme");
-            AudioManager.instance.Play("MenuMusic");
+            AudioManager.instance.Stop(mainTheme);
+            AudioManager.instance.Play(menuTheme);
         }
     }
     

@@ -134,6 +134,7 @@ GameObject:
   - component: {fileID: 78744696}
   - component: {fileID: 78744695}
   - component: {fileID: 78744694}
+  - component: {fileID: 78744697}
   m_Layer: 5
   m_Name: Yes
   m_TagString: Untagged
@@ -255,6 +256,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 78744692}
   m_CullTransparentMesh: 1
+--- !u!114 &78744697
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 78744692}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 71668b1dc285a894c834b76f7e307e69, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  soundName: ButtonClick
 --- !u!1 &108759164
 GameObject:
   m_ObjectHideFlags: 0
@@ -286,6 +300,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   mainMenuScene: MainMenu
   gameScene: MainLevel
+  mainTheme: MainTheme
+  menuTheme: MenuMusic
 --- !u!4 &108759167
 Transform:
   m_ObjectHideFlags: 0
@@ -640,6 +656,7 @@ GameObject:
   - component: {fileID: 608237465}
   - component: {fileID: 608237464}
   - component: {fileID: 608237463}
+  - component: {fileID: 608237467}
   m_Layer: 5
   m_Name: Quit Game
   m_TagString: Untagged
@@ -749,6 +766,19 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: -178}
   m_SizeDelta: {x: 900, y: 400}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &608237467
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 608237462}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 71668b1dc285a894c834b76f7e307e69, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  soundName: ButtonClick
 --- !u!1 &641312761
 GameObject:
   m_ObjectHideFlags: 0
@@ -888,6 +918,8 @@ MonoBehaviour:
   confirmationDialog: {fileID: 689349633}
   confirmYesButton: {fileID: 78744694}
   confirmNoButton: {fileID: 1945530916}
+  mainTheme: MainTheme
+  menuTheme: MenuMusic
 --- !u!4 &666834432
 Transform:
   m_ObjectHideFlags: 0
@@ -1435,6 +1467,82 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1521319137
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1521319140}
+  - component: {fileID: 1521319139}
+  - component: {fileID: 1521319138}
+  m_Layer: 0
+  m_Name: Audio Manager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1521319138
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1521319137}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c3a8afa9426e9b49805566684de7d80, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1521319139
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1521319137}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 966b7f2dc97588847940b35c98f63ae3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sounds:
+  - name: MenuMusic
+    clip: {fileID: 8300000, guid: c08f51add6b8d9543bc387bdd91eafd3, type: 3}
+    volume: 0.2
+    pitch: 1
+    loop: 1
+    source: {fileID: 0}
+  - name: '-'
+    clip: {fileID: 8300000, guid: 2ab9c25233418a34997ff0bdde1f6616, type: 3}
+    volume: 0.15
+    pitch: 1
+    loop: 1
+    source: {fileID: 0}
+  - name: ButtonClick
+    clip: {fileID: 8300000, guid: 5785df9750d7b304cba4e5e0da2b9c62, type: 3}
+    volume: 0.3
+    pitch: 1
+    loop: 0
+    source: {fileID: 0}
+--- !u!4 &1521319140
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1521319137}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -43.3, y: 3.31, z: -0.90000004}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1684532826
 GameObject:
   m_ObjectHideFlags: 0
@@ -1784,6 +1892,7 @@ GameObject:
   - component: {fileID: 1819271506}
   - component: {fileID: 1819271505}
   - component: {fileID: 1819271504}
+  - component: {fileID: 1819271508}
   m_Layer: 5
   m_Name: Start Game
   m_TagString: Untagged
@@ -1893,6 +2002,19 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 186.5}
   m_SizeDelta: {x: 900, y: 400}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1819271508
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1819271503}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 71668b1dc285a894c834b76f7e307e69, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  soundName: ButtonClick
 --- !u!1 &1945530914
 GameObject:
   m_ObjectHideFlags: 0
@@ -1905,6 +2027,7 @@ GameObject:
   - component: {fileID: 1945530918}
   - component: {fileID: 1945530917}
   - component: {fileID: 1945530916}
+  - component: {fileID: 1945530919}
   m_Layer: 5
   m_Name: No
   m_TagString: Untagged
@@ -2026,6 +2149,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1945530914}
   m_CullTransparentMesh: 1
+--- !u!114 &1945530919
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1945530914}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 71668b1dc285a894c834b76f7e307e69, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  soundName: ButtonClick
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -2037,3 +2173,4 @@ SceneRoots:
   - {fileID: 666834432}
   - {fileID: 108759167}
   - {fileID: 1490200149}
+  - {fileID: 1521319140}

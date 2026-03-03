@@ -8,15 +8,39 @@ public class RandomMovement : MonoBehaviour
     public NavMeshAgent agent;
     public float range; 
     public Transform centrePoint; 
+    
+    private enum Behaviours
+    {
+        Patrol,
+        Listen
+    }
+
+    [SerializeField] private Behaviours currentState;
+    private GameObject player;
 
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
+        player = GameObject.FindGameObjectWithTag("Player");
+        currentState = Behaviours.Patrol;
     }
     
     void Update()
     {
-        if(agent.remainingDistance <= agent.stoppingDistance) 
+        switch (currentState)
+        {
+            case Behaviours.Patrol:
+                UpdatePatrol();
+                break;
+            case Behaviours.Listen:
+                UpdateListen();
+                break;
+        }
+    }
+
+    void UpdatePatrol()
+    {
+        if (agent.remainingDistance <= agent.stoppingDistance) 
         {
             Vector3 point;
             if (RandomPoint(centrePoint.position, range, out point)) 
@@ -24,6 +48,12 @@ public class RandomMovement : MonoBehaviour
                 agent.SetDestination(point);
             }
         }
+    }
+
+    void UpdateListen()
+    {
+        // Стоим на месте
+        agent.isStopped = true;
     }
 
     bool RandomPoint(Vector3 center, float range, out Vector3 result)
@@ -38,5 +68,23 @@ public class RandomMovement : MonoBehaviour
 
         result = Vector3.zero;
         return false;
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Player"))
+        {
+            currentState = Behaviours.Listen;
+            agent.isStopped = true;
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("Player"))
+        {
+            currentState = Behaviours.Patrol;
+            agent.isStopped = false;
+        }
     }
 }

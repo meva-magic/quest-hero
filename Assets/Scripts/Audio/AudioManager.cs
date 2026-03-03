@@ -56,4 +56,13 @@ public class AudioManager : MonoBehaviour
         if (s == null || s.source == null) return;
         s.source.Stop();
     }
+    
+    public bool IsPlaying(string sound)
+    {
+        if (sounds == null) return false;
+        
+        Sound s = Array.Find(sounds, item => item.name == sound);
+        if (s == null || s.source == null) return false;
+        return s.source.isPlaying;
+    }
 }

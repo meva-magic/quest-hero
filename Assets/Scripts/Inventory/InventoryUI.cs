@@ -21,6 +21,7 @@ public class InventoryUI : MonoBehaviour, IDropHandler
     private GraphicRaycaster raycaster;
     private CanvasGroup draggingCanvasGroup;
     private Transform originalParent;
+    private int originalSiblingIndex;
     private bool isPanelShowing = false;
 
     private void Start()
@@ -114,7 +115,6 @@ public class InventoryUI : MonoBehaviour, IDropHandler
         
         if (uiItemPrefab == null || item == null) return false;
         
-        // Original working method - Instantiate first, then set parent
         GameObject itemObj = Instantiate(uiItemPrefab);
         ItemUI itemUI = itemObj.GetComponent<ItemUI>();
         
@@ -124,7 +124,6 @@ public class InventoryUI : MonoBehaviour, IDropHandler
             return false;
         }
         
-        // Set parent and reset transform
         itemObj.transform.SetParent(emptySlot.transform);
         itemObj.transform.localPosition = Vector3.zero;
         itemObj.transform.localRotation = Quaternion.identity;
@@ -154,7 +153,9 @@ public class InventoryUI : MonoBehaviour, IDropHandler
         draggingItemId = inventoryId;
         draggingObject = dragObject;
         originalParent = dragObject.transform.parent;
+        originalSiblingIndex = dragObject.transform.GetSiblingIndex();
         
+        dragObject.transform.SetParent(canvas.transform);
         dragObject.transform.SetAsLastSibling();
         
         draggingCanvasGroup = draggingObject.GetComponent<CanvasGroup>();
@@ -175,6 +176,7 @@ public class InventoryUI : MonoBehaviour, IDropHandler
             draggingCanvasGroup = null;
         }
         
+        // Находим слот под мышкой
         PointerEventData pointerData = new PointerEventData(EventSystem.current)
         {
             position = Input.mousePosition
@@ -185,44 +187,81 @@ public class InventoryUI : MonoBehaviour, IDropHandler
             raycaster.Raycast(pointerData, results);
         
         InventorySlot targetSlot = null;
+        
+        // Сначала ищем прямой слот
         foreach (var result in results)
         {
             if (result.gameObject == null) continue;
             
-            InventorySlot slot = result.gameObject.GetComponent<InventorySlot>();
-            if (slot != null && slots.Contains(slot))
+            targetSlot = result.gameObject.GetComponent<InventorySlot>();
+            if (targetSlot != null && slots.Contains(targetSlot))
             {
-                targetSlot = slot;
                 break;
+            }
+            targetSlot = null;
+        }
+        
+        // Если не нашли прямой слот, ищем через ItemUI
+        if (targetSlot == null)
+        {
+            foreach (var result in results)
+            {
+                if (result.gameObject == null) continue;
+                
+                ItemUI itemUI = result.gameObject.GetComponent<ItemUI>();
+                if (itemUI != null && itemUI.transform.parent != null)
+                {
+                    targetSlot = itemUI.transform.parent.GetComponent<InventorySlot>();
+                    if (targetSlot != null && slots.Contains(targetSlot))
+                    {
+                        break;
+                    }
+                }
+                targetSlot = null;
             }
         }
         
+        // Если нашли целевой слот
         if (targetSlot != null)
         {
+            Debug.Log($"Target slot: {targetSlot.name}, Child count: {targetSlot.transform.childCount}");
+            
+            // Целевой слот пустой
             if (targetSlot.transform.childCount == 0)
             {
+                Debug.Log("Moving to empty slot");
                 draggingObject.transform.SetParent(targetSlot.transform);
                 draggingObject.transform.localPosition = Vector3.zero;
                 draggingObject.transform.localRotation = Quaternion.identity;
             }
+            // В целевом слоте есть предмет
             else
             {
-                SwapItems(draggingItemId, targetSlot);
+                Debug.Log("Swapping with occupied slot");
+                Transform targetItem = targetSlot.transform.GetChild(0);
+                
+                // Сохраняем родителей для обмена
+                Transform tempOriginalParent = originalParent;
+                
+                // Перемещаем перетаскиваемый предмет в целевой слот
+                draggingObject.transform.SetParent(targetSlot.transform);
+                draggingObject.transform.localPosition = Vector3.zero;
+                draggingObject.transform.localRotation = Quaternion.identity;
+                
+                // Перемещаем целевой предмет в исходный слот
+                targetItem.SetParent(tempOriginalParent);
+                targetItem.localPosition = Vector3.zero;
+                targetItem.localRotation = Quaternion.identity;
             }
         }
         else
         {
-            if (!IsPointerOverInventoryUI())
-            {
-                if (inventory != null)
-                {
-                    inventory.DropItem(draggingItemId);
-                }
-            }
-            else
-            {
-                ReturnToOriginalPosition();
-            }
+            Debug.Log("No slot found - returning to original");
+            // Не нашли слот - возвращаем в исходный
+            draggingObject.transform.SetParent(originalParent);
+            draggingObject.transform.SetSiblingIndex(originalSiblingIndex);
+            draggingObject.transform.localPosition = Vector3.zero;
+            draggingObject.transform.localRotation = Quaternion.identity;
         }
         
         draggingItemId = null;
@@ -230,58 +269,9 @@ public class InventoryUI : MonoBehaviour, IDropHandler
         originalParent = null;
     }
 
-    private void SwapItems(string draggedItemId, InventorySlot targetSlot)
-    {
-        if (targetSlot.transform.childCount > 0 && originalParent != null)
-        {
-            Transform targetItem = targetSlot.transform.GetChild(0);
-            
-            draggingObject.transform.SetParent(targetSlot.transform);
-            draggingObject.transform.localPosition = Vector3.zero;
-            draggingObject.transform.localRotation = Quaternion.identity;
-            
-            targetItem.SetParent(originalParent);
-            targetItem.localPosition = Vector3.zero;
-            targetItem.localRotation = Quaternion.identity;
-        }
-    }
-
-    private bool IsPointerOverInventoryUI()
-    {
-        if (raycaster == null || EventSystem.current == null) return false;
-        
-        PointerEventData pointerData = new PointerEventData(EventSystem.current)
-        {
-            position = Input.mousePosition
-        };
-        
-        List<RaycastResult> results = new List<RaycastResult>();
-        raycaster.Raycast(pointerData, results);
-        
-        foreach (var result in results)
-        {
-            if (result.gameObject == null) continue;
-            
-            if (result.gameObject == gameObject || result.gameObject.transform.IsChildOf(transform))
-                return true;
-        }
-        return false;
-    }
-
-    private void ReturnToOriginalPosition()
-    {
-        if (draggingObject != null && originalParent != null)
-        {
-            draggingObject.transform.SetParent(originalParent);
-            draggingObject.transform.localPosition = Vector3.zero;
-            draggingObject.transform.localRotation = Quaternion.identity;
-        }
-    }
-
     public void OnDrop(PointerEventData eventData)
     {
-        if (draggingItemId != null)
-            EndDrag();
+        // EndDrag уже обрабатывает все
     }
 
     private InventorySlot FindEmptySlot()
