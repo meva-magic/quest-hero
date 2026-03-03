@@ -114,7 +114,6 @@ public class HideSeekNPC : MonoBehaviour
             currentState != NPCState.Die && 
             currentState != NPCState.Base)
         {
-            Debug.Log($"Too far - Base: {distToBase:F1}/{baseReturnDistance}, Player: {distToPlayer:F1}/{playerDistanceCheck} - returning");
             StartReturnToBase();
             return;
         }
@@ -171,7 +170,6 @@ public class HideSeekNPC : MonoBehaviour
     {
         if (currentState == NPCState.Die || currentState == NPCState.Base) return;
         
-        Debug.Log("Returning to base");
         currentState = NPCState.Base;
         agent.isStopped = false;
         agent.SetDestination(basePoint.position);
@@ -219,6 +217,7 @@ public class HideSeekNPC : MonoBehaviour
         agent.speed = wanderSpeed;
         agent.isStopped = false;
         
+        // Коллайдер всегда включен в Idle
         if (npcCollider != null && !npcCollider.enabled)
             npcCollider.enabled = true;
         
@@ -241,8 +240,9 @@ public class HideSeekNPC : MonoBehaviour
     
     void UpdateFind()
     {
-        if (npcCollider != null && npcCollider.enabled)
-            npcCollider.enabled = false;
+        // Коллайдер включен в Find (нет неуязвимости)
+        if (npcCollider != null && !npcCollider.enabled)
+            npcCollider.enabled = true;
         
         float distToPlayer = Vector3.Distance(transform.position, player.position);
         
@@ -261,13 +261,14 @@ public class HideSeekNPC : MonoBehaviour
     
     void UpdateRun()
     {
+        // Обе фазы бега: коллайдер всегда включен (нет временной неуязвимости)
         if (isRunningFast)
         {
             runTimer += Time.deltaTime;
             agent.speed = runSpeed;
             
-            if (npcCollider != null && npcCollider.enabled)
-                npcCollider.enabled = false;
+            if (npcCollider != null && !npcCollider.enabled)
+                npcCollider.enabled = true;
             
             if (runTimer > runFastDuration)
                 isRunningFast = false;
@@ -430,21 +431,19 @@ public class HideSeekNPC : MonoBehaviour
         {
             timeSinceLastPlayerContact = 0f;
             
-            if (!isInDialogue && !hasGivenItem && currentState == NPCState.Run && !isRunningFast)
+            // Поймать можно ВСЕГДА, если коллайдер включен
+            if (!isInDialogue && !hasGivenItem && npcCollider != null && npcCollider.enabled)
             {
-                if (npcCollider != null && npcCollider.enabled)
+                if (dialogueRoutine != null)
                 {
-                    if (dialogueRoutine != null)
-                    {
-                        StopCoroutine(dialogueRoutine);
-                        dialogueRoutine = null;
-                    }
-                    
-                    if (NPCDialogueUI.Instance != null)
-                        NPCDialogueUI.Instance.HideDialogueImmediate();
-                    
-                    StartDialogue();
+                    StopCoroutine(dialogueRoutine);
+                    dialogueRoutine = null;
                 }
+                
+                if (NPCDialogueUI.Instance != null)
+                    NPCDialogueUI.Instance.HideDialogueImmediate();
+                
+                StartDialogue();
             }
         }
     }
@@ -459,7 +458,7 @@ public class HideSeekNPC : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Player") && !isInDialogue && !hasGivenItem)
         {
-            if (currentState == NPCState.Run && !isRunningFast && npcCollider != null && npcCollider.enabled)
+            if (npcCollider != null && npcCollider.enabled)
             {
                 if (dialogueRoutine != null)
                 {

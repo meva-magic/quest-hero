@@ -14,10 +14,6 @@ public class BasicPlayer : MonoBehaviour
     [SerializeField] string footstepSoundName = "Footsteps";
     bool isMoving = false;
     
-    [Header("Visual")]
-    [SerializeField] private GameObject playerModel; // Перетащите модель игрока сюда
-    [SerializeField] private bool hideModelDuringDialogue = true;
-    
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
@@ -26,25 +22,6 @@ public class BasicPlayer : MonoBehaviour
         {
             DialogueManager.Instance.OnDialogueStarted += DisableMovement;
             DialogueManager.Instance.OnDialogueEnded += EnableMovement;
-            
-            // Добавляем скрытие модели
-            if (hideModelDuringDialogue)
-            {
-                DialogueManager.Instance.OnDialogueStarted += HideModel;
-                DialogueManager.Instance.OnDialogueEnded += ShowModel;
-            }
-        }
-        
-        // Если модель не назначена, используем дочерний объект с MeshRenderer
-        if (playerModel == null)
-        {
-            // Ищем MeshRenderer в дочерних объектах
-            MeshRenderer renderer = GetComponentInChildren<MeshRenderer>();
-            if (renderer != null)
-                playerModel = renderer.gameObject;
-            else
-                // Ищем SkinnedMeshRenderer (для анимированных моделей)
-                playerModel = GetComponentInChildren<SkinnedMeshRenderer>()?.gameObject;
         }
     }
     
@@ -57,11 +34,9 @@ public class BasicPlayer : MonoBehaviour
             return;
         }
         
-        // Check if player is moving
         bool wasMoving = isMoving;
         isMoving = moveInput.magnitude > 0.1f && canMove;
         
-        // Handle footsteps sound
         if (isMoving && !wasMoving)
         {
             if (AudioManager.instance != null)
@@ -80,12 +55,6 @@ public class BasicPlayer : MonoBehaviour
         {
             DialogueManager.Instance.OnDialogueStarted -= DisableMovement;
             DialogueManager.Instance.OnDialogueEnded -= EnableMovement;
-            
-            if (hideModelDuringDialogue)
-            {
-                DialogueManager.Instance.OnDialogueStarted -= HideModel;
-                DialogueManager.Instance.OnDialogueEnded -= ShowModel;
-            }
         }
     }
     
@@ -121,6 +90,9 @@ public class BasicPlayer : MonoBehaviour
         
         if (AudioManager.instance != null)
             AudioManager.instance.Stop(footstepSoundName);
+            
+        // НЕ скрываем модель - просто отключаем движение
+        // gameObject.SetActive(false) - УБРАНО!
     }
     
     private void EnableMovement()
@@ -129,19 +101,6 @@ public class BasicPlayer : MonoBehaviour
         {
             canMove = true;
         }
-    }
-    
-    // Новые методы для скрытия/показа модели
-    private void HideModel()
-    {
-        if (playerModel != null)
-            playerModel.SetActive(false);
-    }
-    
-    private void ShowModel()
-    {
-        if (playerModel != null)
-            playerModel.SetActive(true);
     }
     
     public void SetMovementEnabled(bool enabled)
