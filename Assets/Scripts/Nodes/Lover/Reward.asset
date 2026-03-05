@@ -19,7 +19,7 @@ MonoBehaviour:
   - responseText: "\u041D\u0443 \u0441\u043F\u0430\u0441\u0438\u0431\u043E"
     nextNode: {fileID: 0}
     activateQuest: 0
-    questNode: {fileID: 0}
+    questNode: {fileID: 11400000, guid: d7274c5b863fb5a4bbd5029233e863b9, type: 2}
     finishQuest: 1
     giveReward: 1
   isRepeatingNode: 0

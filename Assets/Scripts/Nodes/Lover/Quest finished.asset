@@ -16,9 +16,9 @@ MonoBehaviour:
     \u0433\u0430\u0434\u043E\u0441\u0442\u044C!"
   responses:
   - responseText: "\u0414\u0430 \u043D\u0443 \u0442\u0435\u0431\u044F"
-    nextNode: {fileID: 0}
+    nextNode: {fileID: 11400000, guid: eebe12021197dcd4bb5415f69c9c02e9, type: 2}
     activateQuest: 0
-    questNode: {fileID: 0}
-    finishQuest: 1
+    questNode: {fileID: 11400000, guid: d7274c5b863fb5a4bbd5029233e863b9, type: 2}
+    finishQuest: 0
     giveReward: 0
   isRepeatingNode: 0
